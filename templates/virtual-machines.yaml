@@ -189,9 +189,11 @@ items:
       targetPort: {{ $route.targetPort }}
     tls:
       termination: {{ coalesce $route.tlsTermination $.Values.vmDefaults.routeTlsTermination }}
+{{- if or $.Values.vmDefaults.routeTlsInsecureEdgeTerminationPolicy $route.tlsInsecureEdgeTerminationPolicy }}
       insecureEdgeTerminationPolicy: {{ coalesce $route.tlsInsecureEdgeTerminationPolicy $.Values.vmDefaults.routeTlsInsecureEdgeTerminationPolicy }}
+{{- end }}
 {{- if $route.tlsSecretKeyName }}
-      tlsSecretKeyName: $route.routeTlsSecretKeyName
+      tlsSecretKeyName: {{ $route.routeTlsSecretKeyName }}
 {{- end }}
 {{- end }}
 kind: List
