@@ -169,7 +169,31 @@ items:
     selector:
       vm.kubevirt.io/name: {{ $identifier }}
     sessionAffinity: None
-    type: NodePort
+    type: {{ (coalesce $vmr.serviceType $.Values.vmDefaults.serviceType) }}
+{{- range $route := $vmr.routes }}
+- apiVersion: v1
+  kind: Route
+  metadata:
+    name: {{ coalesce $route.name $identifier }}
+    annotations:
+      argocd.argoproj.io/sync-wave: "2"
+    labels:
+      app: {{ $identifier }}
+      edge-gitops-role: {{ $vmr.role }}
+  spec:
+    to:
+      kind: Service
+      name: {{ $identifier }}
+      weight: 100
+    port:
+      targetPort: {{ $route.targetPort }}
+    tls:
+      termination: {{ coalesce $route.tlsTermination $.Values.vmDefaults.routeTlsTermination }}
+      insecureEdgeTerminationPolicy: {{ coalesce $route.tlsInsecureEdgeTerminationPolicy $.Values.vmDefaults.routeTlsInsecureEdgeTerminationPolicy }}
+{{- if $route.tlsSecretKeyName }}
+      tlsSecretKeyName: $route.routeTlsSecretKeyName
+{{- end }}
+{{- end }}
 kind: List
 metadata: {}
 {{- end }}
