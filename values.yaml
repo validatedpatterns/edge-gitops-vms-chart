@@ -30,13 +30,27 @@ vmDefaults:
   sshsecret: secret/data/hub/vm-ssh
   cloudinitsecret: secret/data/hub/cloud-init
   sshpubkeyfield: publickey
+  serviceType: NodePort
+  routeTlsInsecureEdgeTerminationPolicy: none
+  routeTlsTermination: passthrough
   # extraLabels is available for default extra labels to add to the virtualmachine
   # extraAnnotations is available for default extra labels to add to the virtualmachine
+  # The following provide defaults if they are not set in the route hash/map:
+  # routeTlsTermination
+  # routeTlsInsecureEdgeTerminationPolicy
+  # routeTlsSecretKeyName - no default
   ports:
     - name: ssh
       port: 22
       protocol: TCP
       targetPort: 22
+  routes: {}
+  # The following keys can be used/set in the route map
+  # name (defaults to vm-name)
+  # targetPort (no default)
+  # tlsTermination (defaults to routeTlsTermination from above)
+  # tlsInsecureEdgeTerminationPolicy (defaults to routeTlsInsecureEdgeTerminationPolicy above)
+  # tlsSecretKeyName - no default - not needed or used if not specified
 
 # Define the VMs you want to create with any specific attributes from vmDefaults
 # in an overrides file.

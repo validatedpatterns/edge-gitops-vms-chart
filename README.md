@@ -1,6 +1,6 @@
 # edge-gitops-vms
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 Edge GitOps VMs
 
@@ -47,6 +47,10 @@ This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtu
 | vmDefaults.ports[0].port | int | `22` |  |
 | vmDefaults.ports[0].protocol | string | `"TCP"` |  |
 | vmDefaults.ports[0].targetPort | int | `22` |  |
+| vmDefaults.routeTlsInsecureEdgeTerminationPolicy | string | `"none"` |  |
+| vmDefaults.routeTlsTermination | string | `"passthrough"` |  |
+| vmDefaults.routes | object | `{}` |  |
+| vmDefaults.serviceType | string | `"NodePort"` |  |
 | vmDefaults.sockets | int | `1` |  |
 | vmDefaults.sshpubkeyfield | string | `"publickey"` |  |
 | vmDefaults.sshsecret | string | `"secret/data/hub/vm-ssh"` |  |
