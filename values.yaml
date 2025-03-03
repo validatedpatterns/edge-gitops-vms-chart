@@ -31,7 +31,7 @@ vmDefaults:
   cloudinitsecret: secret/data/hub/cloud-init
   sshpubkeyfield: publickey
   serviceType: NodePort
-  routeTlsInsecureEdgeTerminationPolicy: none
+  routeTlsInsecureEdgeTerminationPolicy: None
   routeTlsTermination: passthrough
   # extraLabels is available for default extra labels to add to the virtualmachine
   # extraAnnotations is available for default extra labels to add to the virtualmachine
