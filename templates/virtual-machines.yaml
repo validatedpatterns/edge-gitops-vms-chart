@@ -187,6 +187,7 @@ items:
       weight: 100
     port:
       targetPort: {{ $route.targetPort }}
+{{- if or $route.enableTlsBlock $.Values.vmDefaults.routeEnableTlsBlock }}
     tls:
       termination: {{ coalesce $route.tlsTermination $.Values.vmDefaults.routeTlsTermination }}
 {{- if or $.Values.vmDefaults.routeTlsInsecureEdgeTerminationPolicy $route.tlsInsecureEdgeTerminationPolicy }}
@@ -194,6 +195,7 @@ items:
 {{- end }}
 {{- if $route.tlsSecretKeyName }}
       tlsSecretKeyName: {{ $route.routeTlsSecretKeyName }}
+{{- end }}
 {{- end }}
 {{- end }}
 kind: List
