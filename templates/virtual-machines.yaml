@@ -158,9 +158,15 @@ items:
     name: {{ $identifier }}
     annotations:
       argocd.argoproj.io/sync-wave: "2"
+{{- if $vmr.externalDNSShortName }}
+      external-dns.alpha.kubernetes.io/hostname: {{ $vmr.externalDNSShortName }}.{{ $.Values.global.clusterDomain }}
+{{- end }}
     labels:
       app: {{ $identifier }}
       edge-gitops-role: {{ $vmr.role }}
+{{- if (coalesce $vmr.publishService $def.publishService) }}
+      external-dns.validatedpatterns.io/publish: "yes"
+{{- end }}
   spec:
     ipFamilies:
     - IPv4
