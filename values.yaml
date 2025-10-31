@@ -60,6 +60,8 @@ vmDefaults:
 # in an overrides file.
 vms: {}
 
+disableExternalSecrets: false
+
 serviceAccountName: ansible-edge-gitops-sa
 rbac:
   roles:

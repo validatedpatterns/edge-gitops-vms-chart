@@ -1,15 +1,20 @@
 # edge-gitops-vms
 
-![Version: 0.2.9](https://img.shields.io/badge/Version-0.2.9-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.2.10](https://img.shields.io/badge/Version-0.2.10-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 Edge GitOps VMs
 
 This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtualization
 
+### Notable changes
+
+* v0.2.10: Add additional labelling capabilities to apply labels to other objects. Make external secrets optional.
+
 ## Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| disableExternalSecrets | bool | `false` |  |
 | global.clusterDomain | string | `"example.com"` |  |
 | global.pattern | string | `"ansible-edge-gitops"` |  |
 | job.image | string | `"image-registry.openshift-image-registry.svc:5000/openshift/cli:latest"` |  |
