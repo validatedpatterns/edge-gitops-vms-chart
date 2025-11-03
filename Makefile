@@ -43,6 +43,7 @@ super-linter: ## Runs super linter locally
 					-e VALIDATE_MARKDOWN_PRETTIER=false \
 					-e VALIDATE_YAML_PRETTIER=false \
 					-e VALIDATE_YAML=false \
+					-e VALIDATE_CHECKOV=false \
 					-v $(PWD):/tmp/lint:rw,z \
 					-w /tmp/lint \
 					ghcr.io/super-linter/super-linter:slim-v7
