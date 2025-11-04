@@ -13,7 +13,7 @@ waitForMetalNode: true
 jobTerminationGracePeriod: 3600
 
 vmDefaults:
-  cloudInitSecret: secret/data/hub/cloud-init
+  cloudInitSecret: secret/data/hub/cloud-init #checkov:skip=CKV_SECRET_6:External Secret
   accessMode: "ReadWriteMany"
   storageClassName: "ocs-storagecluster-ceph-rbd-virtualization"
   volumeMode: "Block"
@@ -28,7 +28,7 @@ vmDefaults:
   sockets: 1
   threads: 1
   template: rhel8-desktop-medium
-  sshsecret: secret/data/hub/vm-ssh
+  sshsecret: secret/data/hub/vm-ssh #checkov:skip=CKV_SECRET_6:External Secret
   cloudinitsecret: secret/data/hub/cloud-init
   sshpubkeyfield: publickey
   serviceType: NodePort
@@ -59,6 +59,8 @@ vmDefaults:
 # Define the VMs you want to create with any specific attributes from vmDefaults
 # in an overrides file.
 vms: {}
+
+disableExternalSecrets: false
 
 serviceAccountName: ansible-edge-gitops-sa
 rbac:
