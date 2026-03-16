@@ -60,6 +60,11 @@ vmDefaults:
 # in an overrides file.
 vms: {}
 
+externaldatavolumes:
+  - name: test123
+    registryurl: "1234-wxyz"
+    size: "1GiB"
+
 disableExternalSecrets: false
 
 serviceAccountName: ansible-edge-gitops-sa

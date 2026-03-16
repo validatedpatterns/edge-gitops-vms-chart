@@ -1,0 +1,23 @@
+{{- $def := .Values.vmDefaults }}
+{{- range $edvc, $edv := .Values.externaldatavolumes }}
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: {{ $edv.name }}-dv
+  {{- if (coalesce $edv.namespace $def.externaldatavolumenamespace nil) }}
+  namespace: {{ coalesce $edv.namespace $def.externaldatavolumenamespace }}
+  {{- end }}
+spec:
+  source:
+    registry:
+      url: {{ $edv.registryurl }}
+      {{- if $edv.credssecretref }}
+      secretRef: {{ $edv.credssecretref }} 
+      {{- end }}
+  {{- if $edv.size }}
+  storage:
+    resources:
+      requests:
+        storage: {{ $edv.size }}
+  {{- end }}
+{{- end }}
