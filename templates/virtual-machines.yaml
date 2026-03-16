@@ -1,5 +1,6 @@
 {{- $def := .Values.vmDefaults }}
 {{- range $vm, $vmr := .Values.vms }}
+{{- $windows := (coalesce $vmr.os $def.os) contains "windows"}}
 {{- if not $.Values.disableExternalSecrets }}
 ---
 apiVersion: "external-secrets.io/v1beta1"
@@ -70,7 +71,11 @@ metadata:
           "path": "jsonpath::.spec.domain.resources.requests.memory",
           "rule": "integer",
           "message": "This VM requires more memory.",
+          {{- if $windows }}
+          "min": 4294967296 // min = 4GiB
+          {{- else }}
           "min": 1610612736
+          {{- end }}
         }
       ]
     argocd.argoproj.io/sync-wave: "2"
@@ -136,7 +141,21 @@ spec:
           cores: {{ coalesce $vmr.cores $def.cores }}
           sockets: {{ coalesce $vmr.sockets $def.sockets }}
           threads: {{ coalesce $vmr.threads $def.threads }}
+        {{- if $windows }}
+        features:
+          acpi: {}
+          apic: {}
+          hyperv:
+            relaxed: {}
+            spinlocks:
+              spinlocks: 8191 // TODO IDK the significance of this number
+            vapic: {}
+          smm: {}
+        {{- end }}
         devices:
+          {{- if $windows }}
+          tpm: {}
+          {{- end }}
           disks:
           - disk:
               bus: virtio
