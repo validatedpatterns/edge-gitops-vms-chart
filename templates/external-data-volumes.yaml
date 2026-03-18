@@ -1,5 +1,6 @@
 {{- $def := .Values.vmDefaults }}
 {{- range $edvc, $edv := .Values.externaldatavolumes }}
+---
 apiVersion: cdi.kubevirt.io/v1beta1
 kind: DataVolume
 metadata:
