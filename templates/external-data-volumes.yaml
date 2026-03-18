@@ -1,5 +1,5 @@
 {{- $def := .Values.vmDefaults }}
-{{- range $edvc, $edv := .Values.externaldatavolumes }}
+{{- range $edvc, $edv := .Values.externalDataVolumes }}
 ---
 apiVersion: cdi.kubevirt.io/v1beta1
 kind: DataVolume
@@ -9,21 +9,21 @@ metadata:
   namespace: {{ coalesce $edv.namespace $def.externaldatavolumenamespace }}
   {{- end }}
   annotations:
-  {{- if $def.externaldatavolumeannotations }}
-    {{ $def.externaldatavolumeannotations | toYaml }}
+  {{- if $def.externalDataVolumeAnnodations }}
+    {{ $def.externalDataVolumeAnnodations | toYaml }}
   {{- end }}
   {{- if $edv.annotations }}
     {{ $edv.annotations |toYaml }} // FIXME is this going to cause issues if the same label appears twice?
   {{- end }}
 spec:
   source:
-    {{- if eq (coalesce $edv.type $def.datavolumetype) "registry"}}
+    {{- if eq (coalesce $edv.type $def.dataVolumeType) "registry"}}
     registry:
       url: {{ $edv.url }}
-      {{- if $edv.credssecretref }}
-      secretRef: {{ $edv.credssecretref }} 
+      {{- if $edv.registryCredentialsSecret }}
+      secretRef: {{ $edv.registryCredentialsSecret }} 
       {{- end }}
-    {{ else if eq (coalesce $edv.type $def.datavolumetype) "http"}}
+    {{ else if eq (coalesce $edv.type $def.dataVolumeType) "http"}}
     http:
       url: {{ $edv.url }}
     {{- end }}
