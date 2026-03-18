@@ -13,6 +13,8 @@ waitForMetalNode: true
 jobTerminationGracePeriod: 3600
 
 vmDefaults:
+  externaldatavolumeannotations:
+    cdi.kubevirt.io/storage.bind.immediate.requested: "true"
   cloudInitSecret: secret/data/hub/cloud-init #checkov:skip=CKV_SECRET_6:External Secret
   accessMode: "ReadWriteMany"
   storageClassName: "ocs-storagecluster-ceph-rbd-virtualization"
