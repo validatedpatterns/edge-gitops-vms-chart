@@ -63,9 +63,15 @@ vmDefaults:
 vms: {}
 
 externaldatavolumes:
-  - name: test123
-    registryurl: "1234-wxyz"
-    size: "1GiB"
+  - name: quay-windows
+    type: registry
+    url: "docker://quay.io/eduffy/win2k22-dv:thick"
+    size: 50G
+    credssecretref: quay-creds
+  - name: ubuntu-helm
+    type: http
+    url: https://releases.ubuntu.com/24.04.4/ubuntu-24.04.4-live-server-amd64.iso
+    size: 10G
 
 disableExternalSecrets: false
 
