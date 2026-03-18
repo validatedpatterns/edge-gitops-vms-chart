@@ -17,11 +17,16 @@ metadata:
   {{- end }}
 spec:
   source:
+    {{- if eq (coalesce $edv.type $def.datavolumetype) "registry"}}
     registry:
-      url: {{ $edv.registryurl }}
+      url: {{ $edv.url }}
       {{- if $edv.credssecretref }}
       secretRef: {{ $edv.credssecretref }} 
       {{- end }}
+    {{ else if eq (coalesce $edv.type $def.datavolumetype) "http"}}
+    http:
+      url: {{ $edv.url }}
+    {{- end }}
   {{- if $edv.size }}
   storage:
     resources:
