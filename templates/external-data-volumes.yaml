@@ -8,6 +8,13 @@ metadata:
   {{- if (coalesce $edv.namespace $def.externaldatavolumenamespace nil) }}
   namespace: {{ coalesce $edv.namespace $def.externaldatavolumenamespace }}
   {{- end }}
+  annotations:
+  {{- if $def.externaldatavolumeannotations }}
+    {{ $def.externaldatavolumeannotations | toYaml }}
+  {{- end }}
+  {{- if $edv.annotations }}
+    {{ $edv.annotations |toYaml }} // FIXME is this going to cause issues if the same label appears twice?
+  {{- end }}
 spec:
   source:
     registry:
