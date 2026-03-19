@@ -13,6 +13,7 @@ waitForMetalNode: false
 jobTerminationGracePeriod: 3600
 
 vmDefaults:
+  role: generic
   externalDataVolumeAnnodations:
     cdi.kubevirt.io/storage.bind.immediate.requested: "true"
   cloudInitSecret: secret/data/hub/cloud-init #checkov:skip=CKV_SECRET_6:External Secret

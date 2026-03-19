@@ -1,12 +1,13 @@
 {{- $def := .Values.vmDefaults }}
 {{- range $vm, $vmr := .Values.vms }}
-{{- $windows := (coalesce $vmr.os $def.os) contains "windows"}}
+{{- $windows := contains (coalesce $vmr.os $def.os) "windows" }}
+{{- $role := coalesce $vmr.role $def.role }}
 {{- if not $.Values.disableExternalSecrets }}
 ---
 apiVersion: "external-secrets.io/v1beta1"
 kind: ExternalSecret
 metadata:
-  name: es-cloudinit-{{ $vmr.role }}
+  name: es-cloudinit-{{ $role }}
   annotations:
     argocd.argoproj.io/sync-wave: "2"
   {{- $extraLabels := coalesce $vmr.extraLabels $def.extraLabels nil }}
@@ -22,7 +23,7 @@ spec:
     name: {{ $.Values.secretStore.name }}
     kind: {{ $.Values.secretStore.kind }}
   target:
-    name: cloudinit-{{ $vmr.role }}
+    name: cloudinit-{{ $role }}
   dataFrom:
     - extract:
         key: {{ coalesce $vmr.cloudinitsecret $def.cloudinitsecret }}
@@ -30,7 +31,7 @@ spec:
 {{- $ctr := int (coalesce $vmr.count $def.count) }}
 {{- range $i := until $ctr }}
 {{- $idx := printf "%03d" (add $i 1) }}
-{{- $identifier := printf "%s-%s-%s" (coalesce $vmr.os $def.os) $vmr.role $idx }}
+{{- $identifier := printf "%s-%s-%s" (coalesce $vmr.os $def.os) $role $idx }}
 {{- if not $.Values.disableExternalSecrets }}
 ---
 apiVersion: "external-secrets.io/v1beta1"
@@ -85,7 +86,7 @@ metadata:
     {{- end }}
   labels:
     app: {{ $identifier }}
-    edge-gitops-role: {{ $vmr.role }}
+    edge-gitops-role: {{ $role }}
     vm.kubevirt.io/template: {{ coalesce $vmr.template $def.template }}
     vm.kubevirt.io/template.revision: "1"
     vm.kubevirt.io/template.version: v0.19.4
@@ -192,7 +193,7 @@ spec:
       - name: cloudinitdisk
         cloudInitConfigDrive:
           secretRef:
-            name: cloudinit-{{ $vmr.role }}
+            name: cloudinit-{{ $role }}
       {{- end }}
 ---
 apiVersion: v1
@@ -206,7 +207,7 @@ metadata:
 {{- end }}
   labels:
     app: {{ $identifier }}
-    edge-gitops-role: {{ $vmr.role }}
+    edge-gitops-role: {{ $role }}
     {{- range $lbl_k, $lbl_v := (coalesce $vmr.extraLabels $def.extraLabels nil) }}
     {{ $lbl_k | quote }}: {{ $lbl_v | quote }}
     {{- end }}
@@ -233,7 +234,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "2"
   labels:
     app: {{ $identifier }}
-    edge-gitops-role: {{ $vmr.role }}
+    edge-gitops-role: {{ $role }}
     {{- range $lbl_k, $lbl_v := (coalesce $vmr.extraLabels $def.extraLabels nil) }}
     {{ $lbl_k | quote }}: {{ $lbl_v | quote }}
     {{- end }}
