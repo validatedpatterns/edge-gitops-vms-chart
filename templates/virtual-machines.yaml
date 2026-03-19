@@ -95,6 +95,7 @@ metadata:
     {{- end }}
   name: {{ $identifier }}
 spec:
+  {{- if not $vmr.dataVolume }}
   dataVolumeTemplates:
   - apiVersion: cdi.kubevirt.io/v1beta1
     kind: DataVolume
@@ -113,6 +114,7 @@ spec:
             storage: {{ coalesce $vmr.storage $def.storage }}
         storageClassName: {{ coalesce $vmr.storageClassName $def.storageClassName }}
         volumeMode: {{ coalesce $vmr.volumeMode $def.volumeMode }}
+  {{- end }}
   running: true
   template:
     metadata:
@@ -187,8 +189,12 @@ spec:
       terminationGracePeriodSeconds: 180
       volumes:
       - dataVolume:
-          name: {{ $identifier }}
-        name: {{ $identifier }}
+      {{- if $vmr.dataVolume }}
+          name: {{ $vmr.dataVolume }}-dv # name of the DV referenced in values.yaml
+      {{- else }}
+          name: {{ $identifier }} # name of the disk referenced in this fil
+      {{- end }}
+        name: {{ $identifier }} # name of the disk referenced in this file
       {{- if not $.Values.disableExternalSecrets }}
       - name: cloudinitdisk
         cloudInitConfigDrive:
