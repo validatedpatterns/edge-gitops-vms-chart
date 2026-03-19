@@ -9,7 +9,7 @@ secretStore:
 
 vmNamespace: edge-gitops-vms
 
-waitForMetalNode: true
+waitForMetalNode: false
 jobTerminationGracePeriod: 3600
 
 vmDefaults:
@@ -60,7 +60,10 @@ vmDefaults:
 
 # Define the VMs you want to create with any specific attributes from vmDefaults
 # in an overrides file.
-vms: {}
+vms:
+  - name: test-windows-golden-image
+    dataVolume: quay-windows
+    os: windows
 
 externalDataVolumes:
   - name: quay-windows
@@ -73,7 +76,7 @@ externalDataVolumes:
     url: https://releases.ubuntu.com/24.04.4/ubuntu-24.04.4-live-server-amd64.iso
     size: 10G
 
-disableExternalSecrets: false
+disableExternalSecrets: true
 
 serviceAccountName: ansible-edge-gitops-sa
 rbac:
