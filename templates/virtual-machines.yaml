@@ -145,11 +145,11 @@ spec:
         features:
           acpi: {}
           apic: {}
-          hyperv:
-            relaxed: {}
-            spinlocks:
-              spinlocks: 8191 // TODO IDK the significance of this number
-            vapic: {}
+          # hyperv:
+          #   relaxed: {}
+          #   spinlocks:
+          #     spinlocks: 8191 // TODO IDK the significance of this number
+          #   vapic: {}
           smm: {}
         {{- end }}
         devices:
