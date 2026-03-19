@@ -9,6 +9,7 @@ metadata:
   namespace: {{ coalesce $edv.namespace $def.externaldatavolumenamespace }}
   {{- end }}
   annotations:
+    argocd.argoproj.io/sync-wave: "1"
   {{- if $def.externalDataVolumeAnnodations }}
     {{ $def.externalDataVolumeAnnodations | toYaml }}
   {{- end }}
