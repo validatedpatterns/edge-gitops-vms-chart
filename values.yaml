@@ -62,20 +62,24 @@ vmDefaults:
 # Define the VMs you want to create with any specific attributes from vmDefaults
 # in an overrides file.
 vms:
-  - name: test-windows-golden-image
-    dataVolume: quay-windows
-    os: windows
+  # - name: test-windows-golden-image
+  #   dataVolume: quay-windows
+  #   os: windows
+  - name: test-ubuntu-golden-image
+    dataVolume: quay-ubuntu
+    os: ubuntu
+    role: debug
 
 externalDataVolumes:
-  - name: quay-windows
+  - name: quay-ubuntu
     type: registry
-    url: "docker://quay.io/eduffy/win2k22-dv:thick"
-    size: 50G
+    url: "docker://quay.io/eduffy/ubuntu-2404-dv:thin"
+    size: 26G
     registryCredentialsSecret: quay-creds
-  - name: ubuntu-helm
-    type: http
-    url: https://releases.ubuntu.com/24.04.4/ubuntu-24.04.4-live-server-amd64.iso
-    size: 10G
+#   - name: ubuntu-helm
+#     type: http
+#     url: https://releases.ubuntu.com/24.04.4/ubuntu-24.04.4-live-server-amd64.iso
+#     size: 10G
 
 disableExternalSecrets: true
 
