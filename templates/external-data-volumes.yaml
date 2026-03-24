@@ -1,5 +1,30 @@
 {{- $def := .Values.vmDefaults }}
 {{- range $edvc, $edv := .Values.externalDataVolumes }}
+{{- if coalesce $edv.registryCredentialsExternalSecret $def.registryCredentialsExternalSecret nil }}
+---
+apiVersion: "external-secrets.io/v1beta1"
+kind: ExternalSecret
+metadata:
+  name: es-registry-creds-{{ $edv.registryCredentialsSecret }}
+  annotations:
+  {{- $extraLabels := coalesce $edv.extraLabels $def.extraLabels nil }}
+  {{- if $extraLabels }}
+  labels:
+    {{- range $lbl_k, $lbl_v := $extraLabels }}
+    {{ $lbl_k | quote }}: {{ $lbl_v | quote }}
+    {{- end }}
+  {{- end }}
+spec:
+  refreshInterval: 90s
+  secretStoreRef:
+    name: {{ $.Values.secretStore.name }}
+    kind: {{ $.Values.secretStore.kind }}
+  target:
+    name: {{ $edv.registryCredentialsSecret }}
+  dataFrom:
+    - extract:
+        key: {{ coalesce $edv.registryCredentialsExternalSecret $def.registryCredentialsExternalSecret }}
+{{- end }}
 ---
 apiVersion: cdi.kubevirt.io/v1beta1
 kind: DataVolume
