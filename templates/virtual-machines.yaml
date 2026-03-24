@@ -144,17 +144,6 @@ spec:
           cores: {{ coalesce $vmr.cores $def.cores }}
           sockets: {{ coalesce $vmr.sockets $def.sockets }}
           threads: {{ coalesce $vmr.threads $def.threads }}
-        {{- if $windows }}
-        features:
-          acpi: {}
-          apic: {}
-          # hyperv:
-          #   relaxed: {}
-          #   spinlocks:
-          #     spinlocks: 8191 // TODO IDK the significance of this number
-          #   vapic: {}
-          smm: {}
-        {{- end }}
         devices:
           {{- if $windows }}
           tpm: {}
