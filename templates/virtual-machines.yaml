@@ -73,7 +73,7 @@ metadata:
           "rule": "integer",
           "message": "This VM requires more memory.",
           {{- if $windows }}
-          "min": 4294967296 // min = 4GiB
+          "min": 4294967296
           {{- else }}
           "min": 1610612736
           {{- end }}
