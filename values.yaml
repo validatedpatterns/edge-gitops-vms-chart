@@ -63,6 +63,11 @@ vmDefaults:
 # in an overrides file.
 vms: {}
 
+registryCredentialExternalSecrets: {}
+# EXAMPLE
+#   quay-creds:
+#     vaultKey: 'hub/quay-creds'
+
 externalDataVolumes: {}
 # EXAMPLE externalDataVolumes:
 
