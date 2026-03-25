@@ -1,6 +1,6 @@
 # edge-gitops-vms
 
-![Version: 0.2.10](https://img.shields.io/badge/Version-0.2.10-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.3.1](https://img.shields.io/badge/Version-0.3.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 Edge GitOps VMs
 
@@ -8,13 +8,15 @@ This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtu
 
 ### Notable changes
 
+* v0.3.1: Add the ability to deploy Windows VMs with private registry-protected images
 * v0.2.10: Add additional labelling capabilities to apply labels to other objects. Make external secrets optional.
 
 ## Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| disableExternalSecrets | bool | `false` |  |
+| disableExternalSecrets | bool | `true` |  |
+| externalDataVolumes | object | `{}` |  |
 | global.clusterDomain | string | `"example.com"` |  |
 | global.pattern | string | `"ansible-edge-gitops"` |  |
 | job.image | string | `"image-registry.openshift-image-registry.svc:5000/openshift/cli:latest"` |  |
@@ -37,6 +39,7 @@ This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtu
 | rbac.roles[0].verbs[0] | string | `"get"` |  |
 | rbac.roles[0].verbs[1] | string | `"list"` |  |
 | rbac.roles[0].verbs[2] | string | `"watch"` |  |
+| registryCredentialExternalSecrets | object | `{}` |  |
 | secretStore.kind | string | `"ClusterSecretStore"` |  |
 | secretStore.name | string | `"vault-backend"` |  |
 | serviceAccountName | string | `"ansible-edge-gitops-sa"` |  |
@@ -45,6 +48,7 @@ This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtu
 | vmDefaults.cloudinitsecret | string | `"secret/data/hub/cloud-init"` |  |
 | vmDefaults.cores | int | `1` |  |
 | vmDefaults.count | int | `1` |  |
+| vmDefaults.externalDataVolumeAnnodations."cdi.kubevirt.io/storage.bind.immediate.requested" | string | `"true"` |  |
 | vmDefaults.flavor | string | `"medium"` |  |
 | vmDefaults.machineType | string | `"pc-q35-rhel8.4.0"` |  |
 | vmDefaults.memory | string | `"4Gi"` |  |
@@ -54,6 +58,7 @@ This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtu
 | vmDefaults.ports[0].protocol | string | `"TCP"` |  |
 | vmDefaults.ports[0].targetPort | int | `22` |  |
 | vmDefaults.publishService | bool | `false` |  |
+| vmDefaults.role | string | `"generic"` |  |
 | vmDefaults.routeEnableTlsBlock | bool | `false` |  |
 | vmDefaults.routeTlsTermination | string | `"passthrough"` |  |
 | vmDefaults.routes | object | `{}` |  |
