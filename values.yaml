@@ -71,7 +71,8 @@ externalDataVolumes: {}
 #     type: registry
 #     url: "docker://quay.io/eduffy/win2k22-dv:thin"
 #     size: 50G
-#     registryCredentialsSecret: quay-creds # You will need to create this with your creds
+#     registryCredentialsSecret: quay-creds # You will need to create this with your creds (unless using external secrets)
+#     registryCredentialsExternalSecret: '/hub/quay-creds' # You will need to create this in vault with your creds
 
 # Example downloaded from url
 #    - name: ubuntu-installer
