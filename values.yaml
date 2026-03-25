@@ -13,6 +13,9 @@ waitForMetalNode: true
 jobTerminationGracePeriod: 3600
 
 vmDefaults:
+  role: generic
+  externalDataVolumeAnnodations:
+    cdi.kubevirt.io/storage.bind.immediate.requested: "true"
   cloudInitSecret: secret/data/hub/cloud-init #checkov:skip=CKV_SECRET_6:External Secret
   accessMode: "ReadWriteMany"
   storageClassName: "ocs-storagecluster-ceph-rbd-virtualization"
@@ -60,7 +63,29 @@ vmDefaults:
 # in an overrides file.
 vms: {}
 
-disableExternalSecrets: false
+registryCredentialExternalSecrets: {}
+# EXAMPLE
+#   quay-creds:
+#     vaultKey: 'hub/quay-creds'
+
+externalDataVolumes: {}
+# EXAMPLE externalDataVolumes:
+
+# Example pulled from quay
+#   - name: quay-windows
+#     type: registry
+#     url: "docker://quay.io/eduffy/win2k22-dv:thin"
+#     size: 50G
+#     registryCredentialsSecret: quay-creds # You will need to create either manually or using registryCredentialExternalSecrets above
+
+# Example downloaded from url
+#    - name: ubuntu-installer
+#      type: http
+#      url: https://releases.ubuntu.com/24.04.4/ubuntu-24.04.4-live-server-amd64.iso
+#      size: 10G
+
+
+disableExternalSecrets: true
 
 serviceAccountName: ansible-edge-gitops-sa
 rbac:
