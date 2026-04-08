@@ -1,6 +1,6 @@
 # edge-gitops-vms
 
-![Version: 0.3.4](https://img.shields.io/badge/Version-0.3.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.3.5](https://img.shields.io/badge/Version-0.3.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 Edge GitOps VMs
 
@@ -8,6 +8,7 @@ This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtu
 
 ### Notable changes
 
+* v0.3.5: Several fixes to separate DataSources from VM namespace
 * v0.3.4: Correct order of coalesce arguments for main disk storage bus
 * v0.3.3: Allow configuraton of main disk storage bus. Default to virtio but Windows benefits from sata
 * v0.3.2: Add EFI as an option as either a default or vm-specific option
@@ -54,6 +55,7 @@ This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtu
 | vmDefaults.count | int | `1` |  |
 | vmDefaults.efi | bool | `false` |  |
 | vmDefaults.externalDataSourceAnnotations."cdi.kubevirt.io/storage.bind.immediate.requested" | string | `"true"` |  |
+| vmDefaults.externalDataSourceNamespace | string | `"openshift-virtualization-os-images"` |  |
 | vmDefaults.flavor | string | `"medium"` |  |
 | vmDefaults.machineType | string | `"pc-q35-rhel8.4.0"` |  |
 | vmDefaults.mainDiskStorageBus | string | `"virtio"` |  |
