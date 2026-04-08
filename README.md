@@ -20,7 +20,7 @@ This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtu
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | disableExternalSecrets | bool | `true` |  |
-| externalDataVolumes | object | `{}` |  |
+| externalDataSources | object | `{}` |  |
 | global.clusterDomain | string | `"example.com"` |  |
 | global.pattern | string | `"ansible-edge-gitops"` |  |
 | job.image | string | `"image-registry.openshift-image-registry.svc:5000/openshift/cli:latest"` |  |
@@ -53,7 +53,7 @@ This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtu
 | vmDefaults.cores | int | `1` |  |
 | vmDefaults.count | int | `1` |  |
 | vmDefaults.efi | bool | `false` |  |
-| vmDefaults.externalDataVolumeAnnodations."cdi.kubevirt.io/storage.bind.immediate.requested" | string | `"true"` |  |
+| vmDefaults.externalDataSourceAnnotations."cdi.kubevirt.io/storage.bind.immediate.requested" | string | `"true"` |  |
 | vmDefaults.flavor | string | `"medium"` |  |
 | vmDefaults.machineType | string | `"pc-q35-rhel8.4.0"` |  |
 | vmDefaults.mainDiskStorageBus | string | `"virtio"` |  |

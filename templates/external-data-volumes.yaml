@@ -1,17 +1,15 @@
 {{- $def := .Values.vmDefaults }}
-{{- range $edvc, $edv := .Values.externalDataVolumes }}
+{{- range $edvc, $edv := .Values.externalDataSources }}
 ---
 apiVersion: cdi.kubevirt.io/v1beta1
 kind: DataVolume
 metadata:
-  name: {{ $edv.name }}-dv
-  {{- if (coalesce $edv.namespace $def.externaldatavolumenamespace nil) }}
-  namespace: {{ coalesce $edv.namespace $def.externaldatavolumenamespace }}
-  {{- end }}
+  name: {{ $edv.name }}
+  namespace: {{ coalesce $edv.namespace $def.externalDataSourceNamespace }}
   annotations:
     argocd.argoproj.io/sync-wave: "1"
-  {{- if $def.externalDataVolumeAnnodations }}
-    {{ $def.externalDataVolumeAnnodations | toYaml }}
+  {{- if $def.externalDataSourceAnnotations }}
+    {{ $def.externalDataSourceAnnotations | toYaml }}
   {{- end }}
   {{- if $edv.annotations }}
     {{ $edv.annotations |toYaml }}
@@ -22,7 +20,7 @@ spec:
     registry:
       url: {{ $edv.url }}
       {{- if $edv.registryCredentialsSecret }}
-      secretRef: {{ $edv.registryCredentialsSecret }} 
+      secretRef: {{ $edv.registryCredentialsSecret }}
       {{- end }}
     {{ else if eq (coalesce $edv.type $def.dataVolumeType) "http"}}
     http:
@@ -34,4 +32,89 @@ spec:
       requests:
         storage: {{ $edv.size }}
   {{- end }}
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataSource
+metadata:
+  name: {{ $edv.name }}
+  namespace: {{ coalesce $edv.namespace $def.externalDataSourceNamespace }}
+  annotations:
+    cdi.kubevirt.io/storage.bind.immediate.requested: "true"
+spec:
+  source:
+    pvc:
+      name: {{ $edv.name }}
+      namespace: {{ coalesce $edv.namespace $def.externalDataSourceNamespace }}
+{{- end }}
+
+{{- if gt ( len .Values.externalDataSources ) 0 }} # this is needed for DataSources to clone DataVolumes
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: os-images.kubevirt.io:view
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
+  - persistentvolumeclaims/status
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cdi.kubevirt.io
+  resources:
+  - datavolumes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cdi.kubevirt.io
+  resources:
+  - datavolumes/source
+  verbs:
+  - create
+- apiGroups:
+  - cdi.kubevirt.io
+  resources:
+  - datasources
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cdi.kubevirt.io
+  resources:
+  - dataimportcrons
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: os-images.kubevirt.io:view
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: os-images.kubevirt.io:view
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:authenticated
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:serviceaccounts
 {{- end }}

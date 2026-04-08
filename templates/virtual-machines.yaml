@@ -95,7 +95,6 @@ metadata:
     {{- end }}
   name: {{ $identifier }}
 spec:
-  {{- if not $vmr.dataVolume }}
   dataVolumeTemplates:
   - apiVersion: cdi.kubevirt.io/v1beta1
     kind: DataVolume
@@ -104,8 +103,8 @@ spec:
     spec:
       sourceRef:
         kind: DataSource
-        name: {{ coalesce $vmr.dataSource $def.dataSource $vmr.os $def.os }}
-        namespace: openshift-virtualization-os-images
+        name: {{ coalesce $vmr.dataVolume $def.dataVolume $vmr.os $def.os }}
+        namespace: {{ $def.externalDataSourceNamespace }}
       pvc:
         accessModes:
           - {{ coalesce $vmr.accessMode $def.accessMode }}
@@ -114,7 +113,6 @@ spec:
             storage: {{ coalesce $vmr.storage $def.storage }}
         storageClassName: {{ coalesce $vmr.storageClassName $def.storageClassName }}
         volumeMode: {{ coalesce $vmr.volumeMode $def.volumeMode }}
-  {{- end }}
   running: true
   template:
     metadata:
@@ -186,11 +184,7 @@ spec:
       terminationGracePeriodSeconds: 180
       volumes:
       - dataVolume:
-      {{- if $vmr.dataVolume }}
-          name: {{ $vmr.dataVolume }}-dv # name of the DV referenced in values.yaml
-      {{- else }}
-          name: {{ $identifier }} # name of the disk referenced in this fil
-      {{- end }}
+          name: {{ $identifier }} # name of the disk referenced in this file
         name: {{ $identifier }} # name of the disk referenced in this file
       {{- if not $.Values.disableExternalSecrets }}
       - name: cloudinitdisk
