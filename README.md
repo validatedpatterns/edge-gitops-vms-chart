@@ -21,7 +21,7 @@ This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtu
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| disableExternalSecrets | bool | `true` |  |
+| disableExternalSecrets | bool | `false` |  |
 | externalDataSources | object | `{}` |  |
 | global.clusterDomain | string | `"example.com"` |  |
 | global.pattern | string | `"ansible-edge-gitops"` |  |

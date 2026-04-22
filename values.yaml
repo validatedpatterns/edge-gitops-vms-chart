@@ -94,7 +94,7 @@ externalDataSources: {}
 # CloudInit configuration. If registry credentials are specified in
 # registryCredentialExternalSecrets then they will be fetched using an
 # ExternalSecret regardless of what this field is set to
-disableExternalSecrets: true
+disableExternalSecrets: false
 
 serviceAccountName: ansible-edge-gitops-sa
 rbac:
