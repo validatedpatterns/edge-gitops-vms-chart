@@ -4,7 +4,7 @@
 {{- $role := coalesce $vmr.role $def.role }}
 {{- if not $.Values.disableExternalSecrets }}
 ---
-apiVersion: "external-secrets.io/v1beta1"
+apiVersion: {{ $.Values.secretStore.esoApiVersion }}
 kind: ExternalSecret
 metadata:
   name: es-cloudinit-{{ $role }}
@@ -18,7 +18,7 @@ metadata:
     {{- end }}
   {{- end }}
 spec:
-  refreshInterval: 90s
+  refreshInterval: 1m30s
   secretStoreRef:
     name: {{ $.Values.secretStore.name }}
     kind: {{ $.Values.secretStore.kind }}
@@ -34,7 +34,7 @@ spec:
 {{- $identifier := printf "%s-%s-%s" (coalesce $vmr.os $def.os) $role $idx }}
 {{- if not $.Values.disableExternalSecrets }}
 ---
-apiVersion: "external-secrets.io/v1beta1"
+apiVersion: {{ $.Values.secretStore.esoApiVersion }}
 kind: ExternalSecret
 metadata:
   name: es-authorizedsshkeys-{{ $identifier }}
@@ -48,7 +48,7 @@ metadata:
     {{- end }}
   {{- end }}
 spec:
-  refreshInterval: 90s
+  refreshInterval: 1m30s
   secretStoreRef:
     name: {{ $.Values.secretStore.name }}
     kind: {{ $.Values.secretStore.kind }}
