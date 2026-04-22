@@ -1,6 +1,6 @@
 # edge-gitops-vms
 
-![Version: 0.3.5](https://img.shields.io/badge/Version-0.3.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.4.0](https://img.shields.io/badge/Version-0.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 Edge GitOps VMs
 
@@ -8,6 +8,7 @@ This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtu
 
 ### Notable changes
 
+* v0.4.0: Parameterize ESO API version and default it to v1
 * v0.3.5: Several fixes to separate DataSources from VM namespace
 * v0.3.4: Correct order of coalesce arguments for main disk storage bus
 * v0.3.3: Allow configuraton of main disk storage bus. Default to virtio but Windows benefits from sata
@@ -45,6 +46,7 @@ This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtu
 | rbac.roles[0].verbs[1] | string | `"list"` |  |
 | rbac.roles[0].verbs[2] | string | `"watch"` |  |
 | registryCredentialExternalSecrets | object | `{}` |  |
+| secretStore.esoApiVersion | string | `"external-secrets.io/v1"` |  |
 | secretStore.kind | string | `"ClusterSecretStore"` |  |
 | secretStore.name | string | `"vault-backend"` |  |
 | serviceAccountName | string | `"ansible-edge-gitops-sa"` |  |

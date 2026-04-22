@@ -4,6 +4,7 @@ global:
   clusterDomain: example.com
 
 secretStore:
+  esoApiVersion: external-secrets.io/v1
   name: vault-backend
   kind: ClusterSecretStore
 
