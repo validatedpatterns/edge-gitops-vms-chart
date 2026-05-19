@@ -10,7 +10,7 @@ secretStore:
 
 vmNamespace: edge-gitops-vms
 
-waitForMetalNode: true
+waitForMetalNode: false
 jobTerminationGracePeriod: 3600
 
 vmDefaults:
