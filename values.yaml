@@ -8,7 +8,7 @@ secretStore:
   name: vault-backend
   kind: ClusterSecretStore
 
-vmNamespace: edge-gitops-vms
+vmNamespace: gitops-vms
 
 waitForMetalNode: false
 jobTerminationGracePeriod: 3600
@@ -30,8 +30,8 @@ vmDefaults:
   # Always | RerunOnFailure | Manual | Halted | Once (mutually exclusive with spec.running)
   runStrategy: Always
   flavor: medium
-  workload: desktop
-  os: rhel8
+  workload: server
+  os: rhel9
   efi: false
   storage: 30Gi
   memory: 4Gi
@@ -41,7 +41,7 @@ vmDefaults:
   cores: 1
   sockets: 1
   threads: 1
-  template: rhel8-desktop-medium
+  template: rhel9-server-medium
   sshsecret: secret/data/hub/vm-ssh #checkov:skip=CKV_SECRET_6:External Secret
   cloudinitsecret: secret/data/hub/cloud-init
   sshpubkeyfield: publickey
@@ -132,7 +132,7 @@ rbac:
       subjects:
         kind: ServiceAccount
         name: ansible-edge-gitops-sa
-        namespace: edge-gitops-vms
+        namespace: gitops-vms
         apiGroup: ""
       roleRef:
         kind: ClusterRole

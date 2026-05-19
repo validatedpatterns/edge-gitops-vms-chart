@@ -4,7 +4,7 @@ templates:
   - templates/virtual-machines.yaml
 release:
   name: test
-  namespace: edge-gitops-vms
+  namespace: gitops-vms
 tests:
   - it: uses runStrategy instead of running
     set:
@@ -42,7 +42,7 @@ tests:
     asserts:
       - equal:
           path: spec.dataVolumeTemplates[1].metadata.name
-          value: rhel8-test-001-data
+          value: rhel9-test-001-data
       - equal:
           path: spec.dataVolumeTemplates[1].spec.source.blank
           value: {}
@@ -54,4 +54,4 @@ tests:
           content:
             disk:
               bus: virtio
-            name: rhel8-test-001-data
+            name: rhel9-test-001-data

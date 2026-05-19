@@ -8,6 +8,8 @@ This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtu
 
 ### Notable changes
 
+* v0.5.0: Change default VM type to rhel9 and workload type to server; change other defaults to "gitops-vms" from "edge-gitops-vms"
+* v0.5.0: Change default waitForMetalNode to false
 * v0.5.0: Add optional additional disks per VM; use spec.runStrategy instead of spec.running (default Always); default machineType q35 (KubeVirt generic q35 alias)
 * v0.4.0: Parameterize ESO API version and default it to v1
 * v0.3.5: Several fixes to separate DataSources from VM namespace
@@ -37,7 +39,7 @@ This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtu
 | rbac.roleBindings[0].subjects.apiGroup | string | `""` |  |
 | rbac.roleBindings[0].subjects.kind | string | `"ServiceAccount"` |  |
 | rbac.roleBindings[0].subjects.name | string | `"ansible-edge-gitops-sa"` |  |
-| rbac.roleBindings[0].subjects.namespace | string | `"edge-gitops-vms"` |  |
+| rbac.roleBindings[0].subjects.namespace | string | `"gitops-vms"` |  |
 | rbac.roles[0].apiGroups[0] | string | `"machine.openshift.io"` |  |
 | rbac.roles[0].createRole | bool | `true` |  |
 | rbac.roles[0].name | string | `"view-machine-api"` |  |
@@ -64,7 +66,7 @@ This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtu
 | vmDefaults.machineType | string | `"q35"` |  |
 | vmDefaults.mainDiskStorageBus | string | `"virtio"` |  |
 | vmDefaults.memory | string | `"4Gi"` |  |
-| vmDefaults.os | string | `"rhel8"` |  |
+| vmDefaults.os | string | `"rhel9"` |  |
 | vmDefaults.ports[0].name | string | `"ssh"` |  |
 | vmDefaults.ports[0].port | int | `22` |  |
 | vmDefaults.ports[0].protocol | string | `"TCP"` |  |
@@ -81,11 +83,11 @@ This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtu
 | vmDefaults.sshsecret | string | `"secret/data/hub/vm-ssh"` |  |
 | vmDefaults.storage | string | `"30Gi"` |  |
 | vmDefaults.storageClassName | string | `"ocs-storagecluster-ceph-rbd-virtualization"` |  |
-| vmDefaults.template | string | `"rhel8-desktop-medium"` |  |
+| vmDefaults.template | string | `"rhel9-server-medium"` |  |
 | vmDefaults.threads | int | `1` |  |
 | vmDefaults.volumeMode | string | `"Block"` |  |
-| vmDefaults.workload | string | `"desktop"` |  |
-| vmNamespace | string | `"edge-gitops-vms"` |  |
+| vmDefaults.workload | string | `"server"` |  |
+| vmNamespace | string | `"gitops-vms"` |  |
 | vms | object | `{}` |  |
 | waitForMetalNode | bool | `false` |  |
 
