@@ -32,6 +32,7 @@ spec:
 {{- range $i := until $ctr }}
 {{- $idx := printf "%03d" (add $i 1) }}
 {{- $identifier := printf "%s-%s-%s" (coalesce $vmr.os $def.os) $role $idx }}
+{{- $additionalDisks := coalesce $vmr.additionalDisks $def.additionalDisks (list) }}
 {{- if not $.Values.disableExternalSecrets }}
 ---
 apiVersion: {{ $.Values.secretStore.esoApiVersion }}
@@ -113,7 +114,31 @@ spec:
             storage: {{ coalesce $vmr.storage $def.storage }}
         storageClassName: {{ coalesce $vmr.storageClassName $def.storageClassName }}
         volumeMode: {{ coalesce $vmr.volumeMode $def.volumeMode }}
-  running: true
+  {{- range $disk := $additionalDisks }}
+  - apiVersion: cdi.kubevirt.io/v1beta1
+    kind: DataVolume
+    metadata:
+      name: {{ $identifier }}-{{ required "additionalDisks[].name is required" $disk.name }}
+    spec:
+      {{- if $disk.dataVolume }}
+      sourceRef:
+        kind: DataSource
+        name: {{ $disk.dataVolume }}
+        namespace: {{ $def.externalDataSourceNamespace }}
+      {{- else }}
+      source:
+        blank: {}
+      {{- end }}
+      pvc:
+        accessModes:
+          - {{ coalesce $disk.accessMode $vmr.accessMode $def.accessMode }}
+        resources:
+          requests:
+            storage: {{ required (printf "additionalDisks[%s].storage is required" (required "additionalDisks[].name is required" $disk.name)) $disk.storage }}
+        storageClassName: {{ coalesce $disk.storageClassName $vmr.storageClassName $def.storageClassName }}
+        volumeMode: {{ coalesce $disk.volumeMode $vmr.volumeMode $def.volumeMode }}
+  {{- end }}
+  runStrategy: {{ coalesce $vmr.runStrategy $def.runStrategy "Always" }}
   template:
     metadata:
       annotations:
@@ -158,6 +183,11 @@ spec:
           - disk:
               bus: {{ coalesce $vmr.mainDiskStorageBus $def.mainDiskStorageBus }}
             name: {{ $identifier }}
+          {{- range $disk := $additionalDisks }}
+          - disk:
+              bus: {{ coalesce $disk.bus $vmr.additionalDiskStorageBus $def.additionalDiskStorageBus $vmr.mainDiskStorageBus $def.mainDiskStorageBus }}
+            name: {{ $identifier }}-{{ $disk.name }}
+          {{- end }}
           {{- if not $.Values.disableExternalSecrets }}
           - disk:
               bus: virtio
@@ -186,6 +216,11 @@ spec:
       - dataVolume:
           name: {{ $identifier }} # name of the disk referenced in this file
         name: {{ $identifier }} # name of the disk referenced in this file
+      {{- range $disk := $additionalDisks }}
+      - dataVolume:
+          name: {{ $identifier }}-{{ $disk.name }}
+        name: {{ $identifier }}-{{ $disk.name }}
+      {{- end }}
       {{- if not $.Values.disableExternalSecrets }}
       - name: cloudinitdisk
         cloudInitConfigDrive:

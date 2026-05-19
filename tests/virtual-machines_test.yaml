@@ -1,0 +1,54 @@
+---
+suite: virtual-machines
+templates:
+  - templates/virtual-machines.yaml
+release:
+  name: test
+  namespace: edge-gitops-vms
+tests:
+  - it: uses runStrategy instead of running
+    set:
+      disableExternalSecrets: true
+      vms:
+        testvm:
+          role: test
+          count: 1
+    documentSelector:
+      path: kind
+      value: VirtualMachine
+    asserts:
+      - notExists:
+          path: spec.running
+      - equal:
+          path: spec.runStrategy
+          value: Always
+
+  - it: renders additional blank disks
+    set:
+      disableExternalSecrets: true
+      vms:
+        testvm:
+          role: test
+          count: 1
+          additionalDisks:
+            - name: data
+              storage: 50Gi
+    documentSelector:
+      path: kind
+      value: VirtualMachine
+    asserts:
+      - equal:
+          path: spec.dataVolumeTemplates[1].metadata.name
+          value: rhel8-test-001-data
+      - equal:
+          path: spec.dataVolumeTemplates[1].spec.source.blank
+          value: {}
+      - equal:
+          path: spec.dataVolumeTemplates[1].spec.pvc.resources.requests.storage
+          value: 50Gi
+      - contains:
+          path: spec.template.spec.domain.devices.disks
+          content:
+            disk:
+              bus: virtio
+            name: rhel8-test-001-data

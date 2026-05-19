@@ -25,6 +25,10 @@ vmDefaults:
   count: 1
   # Could also be sata
   mainDiskStorageBus: virtio
+  # Bus for additionalDisks entries when bus is not set per disk
+  additionalDiskStorageBus: virtio
+  # Always | RerunOnFailure | Manual | Halted | Once (mutually exclusive with spec.running)
+  runStrategy: Always
   flavor: medium
   workload: desktop
   os: rhel8
@@ -66,6 +70,12 @@ vmDefaults:
 
 # Define the VMs you want to create with any specific attributes from vmDefaults
 # in an overrides file.
+# Per-VM additionalDisks (optional; can also be set under vmDefaults):
+#   additionalDisks:
+#     - name: data
+#       storage: 100Gi
+#       # bus, accessMode, storageClassName, volumeMode optional (inherit vmDefaults)
+#       # dataVolume: clone from a DataSource name; omit for a blank disk
 vms: {}
 
 registryCredentialExternalSecrets: {}

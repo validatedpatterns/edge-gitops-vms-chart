@@ -1,6 +1,6 @@
 # edge-gitops-vms
 
-![Version: 0.4.0](https://img.shields.io/badge/Version-0.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.5.0](https://img.shields.io/badge/Version-0.5.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 Edge GitOps VMs
 
@@ -8,6 +8,7 @@ This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtu
 
 ### Notable changes
 
+* v0.5.0: Add optional additional disks per VM; use spec.runStrategy instead of spec.running (default Always)
 * v0.4.0: Parameterize ESO API version and default it to v1
 * v0.3.5: Several fixes to separate DataSources from VM namespace
 * v0.3.4: Correct order of coalesce arguments for main disk storage bus
@@ -51,6 +52,7 @@ This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtu
 | secretStore.name | string | `"vault-backend"` |  |
 | serviceAccountName | string | `"ansible-edge-gitops-sa"` |  |
 | vmDefaults.accessMode | string | `"ReadWriteMany"` |  |
+| vmDefaults.additionalDiskStorageBus | string | `"virtio"` |  |
 | vmDefaults.cloudInitSecret | string | `"secret/data/hub/cloud-init"` |  |
 | vmDefaults.cloudinitsecret | string | `"secret/data/hub/cloud-init"` |  |
 | vmDefaults.cores | int | `1` |  |
@@ -72,6 +74,7 @@ This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtu
 | vmDefaults.routeEnableTlsBlock | bool | `false` |  |
 | vmDefaults.routeTlsTermination | string | `"passthrough"` |  |
 | vmDefaults.routes | object | `{}` |  |
+| vmDefaults.runStrategy | string | `"Always"` |  |
 | vmDefaults.serviceType | string | `"NodePort"` |  |
 | vmDefaults.sockets | int | `1` |  |
 | vmDefaults.sshpubkeyfield | string | `"publickey"` |  |
