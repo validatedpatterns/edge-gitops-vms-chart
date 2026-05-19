@@ -8,7 +8,7 @@ This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtu
 
 ### Notable changes
 
-* v0.5.0: Add optional additional disks per VM; use spec.runStrategy instead of spec.running (default Always)
+* v0.5.0: Add optional additional disks per VM; use spec.runStrategy instead of spec.running (default Always); default machineType q35 (KubeVirt generic q35 alias)
 * v0.4.0: Parameterize ESO API version and default it to v1
 * v0.3.5: Several fixes to separate DataSources from VM namespace
 * v0.3.4: Correct order of coalesce arguments for main disk storage bus
@@ -61,7 +61,7 @@ This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtu
 | vmDefaults.externalDataSourceAnnotations."cdi.kubevirt.io/storage.bind.immediate.requested" | string | `"true"` |  |
 | vmDefaults.externalDataSourceNamespace | string | `"openshift-virtualization-os-images"` |  |
 | vmDefaults.flavor | string | `"medium"` |  |
-| vmDefaults.machineType | string | `"pc-q35-rhel8.4.0"` |  |
+| vmDefaults.machineType | string | `"q35"` |  |
 | vmDefaults.mainDiskStorageBus | string | `"virtio"` |  |
 | vmDefaults.memory | string | `"4Gi"` |  |
 | vmDefaults.os | string | `"rhel8"` |  |

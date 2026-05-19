@@ -35,7 +35,9 @@ vmDefaults:
   efi: false
   storage: 30Gi
   memory: 4Gi
-  machineType: pc-q35-rhel8.4.0
+  # Generic q35 alias (KubeVirt AMD64 default); libvirt resolves per node. Prefer this over
+  # pc-q35-rhel9.x.0 unless you must pin a version for live-migration homogeneity.
+  machineType: q35
   cores: 1
   sockets: 1
   threads: 1

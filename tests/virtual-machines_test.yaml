@@ -22,6 +22,9 @@ tests:
       - equal:
           path: spec.runStrategy
           value: Always
+      - equal:
+          path: spec.template.spec.domain.machine.type
+          value: q35
 
   - it: renders additional blank disks
     set:
