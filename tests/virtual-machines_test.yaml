@@ -1,0 +1,151 @@
+---
+suite: virtual-machines
+templates:
+  - templates/virtual-machines.yaml
+release:
+  name: test
+  namespace: gitops-vms
+tests:
+  - it: uses runStrategy instead of running
+    set:
+      disableExternalSecrets: true
+      vms:
+        testvm:
+          role: test
+          count: 1
+    documentSelector:
+      path: kind
+      value: VirtualMachine
+    asserts:
+      - notExists:
+          path: spec.running
+      - equal:
+          path: spec.runStrategy
+          value: Always
+      - equal:
+          path: spec.template.spec.domain.machine.type
+          value: q35
+
+  - it: renders additional blank disks
+    set:
+      disableExternalSecrets: true
+      vms:
+        testvm:
+          role: test
+          count: 1
+          additionalDisks:
+            - name: data
+              storage: 50Gi
+    documentSelector:
+      path: kind
+      value: VirtualMachine
+    asserts:
+      - equal:
+          path: spec.dataVolumeTemplates[1].metadata.name
+          value: rhel9-test-001-data
+      - equal:
+          path: spec.dataVolumeTemplates[1].spec.source.blank
+          value: {}
+      - equal:
+          path: spec.dataVolumeTemplates[1].spec.pvc.resources.requests.storage
+          value: 50Gi
+      - contains:
+          path: spec.template.spec.domain.devices.disks
+          content:
+            disk:
+              bus: virtio
+            name: rhel9-test-001-data
+
+  - it: windows defaults additional disks to virtio and omits cloud-init
+    set:
+      vms:
+        winvm:
+          role: desktop
+          count: 1
+          os: windows2k22
+          additionalDisks:
+            - name: data
+              storage: 80Gi
+    documentSelector:
+      path: kind
+      value: VirtualMachine
+    asserts:
+      - contains:
+          path: spec.template.spec.domain.devices.disks
+          content:
+            disk:
+              bus: virtio
+            name: windows2k22-desktop-001-data
+      - notContains:
+          path: spec.template.spec.domain.devices.disks
+          content:
+            name: cloudinitdisk
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: cloudinitdisk
+      - notExists:
+          path: spec.template.spec.accessCredentials
+      - exists:
+          path: spec.template.spec.domain.devices.tpm
+      - matchRegex:
+          path: metadata.annotations["vm.kubevirt.io/validations"]
+          pattern: '"min": 4294967296'
+
+  - it: windows skips cloud-init and ssh external secrets
+    set:
+      vms:
+        winvm:
+          role: desktop
+          count: 1
+          os: windows2k22
+    asserts:
+      - hasDocuments:
+          count: 2
+
+  - it: linux still renders cloud-init when external secrets enabled
+    set:
+      vms:
+        linuxvm:
+          role: server
+          count: 1
+          os: rhel9
+    documentSelector:
+      path: kind
+      value: VirtualMachine
+    asserts:
+      - contains:
+          path: spec.template.spec.domain.devices.disks
+          content:
+            disk:
+              bus: virtio
+            name: cloudinitdisk
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: cloudinitdisk
+            cloudInitConfigDrive:
+              secretRef:
+                name: cloudinit-server
+
+  - it: windows honors per-disk sata bus override
+    set:
+      vms:
+        winvm:
+          role: desktop
+          count: 1
+          os: windows2k22
+          additionalDisks:
+            - name: data
+              storage: 80Gi
+              bus: sata
+    documentSelector:
+      path: kind
+      value: VirtualMachine
+    asserts:
+      - contains:
+          path: spec.template.spec.domain.devices.disks
+          content:
+            disk:
+              bus: sata
+            name: windows2k22-desktop-001-data

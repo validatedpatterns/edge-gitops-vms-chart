@@ -1,8 +1,9 @@
 {{- $def := .Values.vmDefaults }}
 {{- range $vm, $vmr := .Values.vms }}
-{{- $windows := contains (coalesce $vmr.os $def.os) "windows" }}
+{{- $os := coalesce $vmr.os $def.os }}
+{{- $windows := regexMatch "(?i)windows" $os }}
 {{- $role := coalesce $vmr.role $def.role }}
-{{- if not $.Values.disableExternalSecrets }}
+{{- if and (not $windows) (not $.Values.disableExternalSecrets) }}
 ---
 apiVersion: {{ $.Values.secretStore.esoApiVersion }}
 kind: ExternalSecret
@@ -32,7 +33,8 @@ spec:
 {{- range $i := until $ctr }}
 {{- $idx := printf "%03d" (add $i 1) }}
 {{- $identifier := printf "%s-%s-%s" (coalesce $vmr.os $def.os) $role $idx }}
-{{- if not $.Values.disableExternalSecrets }}
+{{- $additionalDisks := coalesce $vmr.additionalDisks $def.additionalDisks (list) }}
+{{- if and (not $windows) (not $.Values.disableExternalSecrets) }}
 ---
 apiVersion: {{ $.Values.secretStore.esoApiVersion }}
 kind: ExternalSecret
@@ -113,7 +115,31 @@ spec:
             storage: {{ coalesce $vmr.storage $def.storage }}
         storageClassName: {{ coalesce $vmr.storageClassName $def.storageClassName }}
         volumeMode: {{ coalesce $vmr.volumeMode $def.volumeMode }}
-  running: true
+  {{- range $disk := $additionalDisks }}
+  - apiVersion: cdi.kubevirt.io/v1beta1
+    kind: DataVolume
+    metadata:
+      name: {{ $identifier }}-{{ required "additionalDisks[].name is required" $disk.name }}
+    spec:
+      {{- if $disk.dataVolume }}
+      sourceRef:
+        kind: DataSource
+        name: {{ $disk.dataVolume }}
+        namespace: {{ $def.externalDataSourceNamespace }}
+      {{- else }}
+      source:
+        blank: {}
+      {{- end }}
+      pvc:
+        accessModes:
+          - {{ coalesce $disk.accessMode $vmr.accessMode $def.accessMode }}
+        resources:
+          requests:
+            storage: {{ required (printf "additionalDisks[%s].storage is required" (required "additionalDisks[].name is required" $disk.name)) $disk.storage }}
+        storageClassName: {{ coalesce $disk.storageClassName $vmr.storageClassName $def.storageClassName }}
+        volumeMode: {{ coalesce $disk.volumeMode $vmr.volumeMode $def.volumeMode }}
+  {{- end }}
+  runStrategy: {{ coalesce $vmr.runStrategy $def.runStrategy "Always" }}
   template:
     metadata:
       annotations:
@@ -128,7 +154,7 @@ spec:
         kubevirt.io/size: {{ coalesce $vmr.flavor $def.flavor }}
         vm.kubevirt.io/name: {{ $identifier }}
     spec:
-      {{- if not $.Values.disableExternalSecrets }}
+      {{- if and (not $windows) (not $.Values.disableExternalSecrets) }}
       accessCredentials:
         - sshPublicKey:
             propagationMethod:
@@ -158,7 +184,12 @@ spec:
           - disk:
               bus: {{ coalesce $vmr.mainDiskStorageBus $def.mainDiskStorageBus }}
             name: {{ $identifier }}
-          {{- if not $.Values.disableExternalSecrets }}
+          {{- range $disk := $additionalDisks }}
+          - disk:
+              bus: {{ coalesce $disk.bus $vmr.additionalDiskStorageBus $def.additionalDiskStorageBus $vmr.mainDiskStorageBus $def.mainDiskStorageBus }}
+            name: {{ $identifier }}-{{ $disk.name }}
+          {{- end }}
+          {{- if and (not $windows) (not $.Values.disableExternalSecrets) }}
           - disk:
               bus: virtio
             name: cloudinitdisk
@@ -186,7 +217,12 @@ spec:
       - dataVolume:
           name: {{ $identifier }} # name of the disk referenced in this file
         name: {{ $identifier }} # name of the disk referenced in this file
-      {{- if not $.Values.disableExternalSecrets }}
+      {{- range $disk := $additionalDisks }}
+      - dataVolume:
+          name: {{ $identifier }}-{{ $disk.name }}
+        name: {{ $identifier }}-{{ $disk.name }}
+      {{- end }}
+      {{- if and (not $windows) (not $.Values.disableExternalSecrets) }}
       - name: cloudinitdisk
         cloudInitConfigDrive:
           secretRef:
