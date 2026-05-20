@@ -186,7 +186,7 @@ spec:
             name: {{ $identifier }}
           {{- range $disk := $additionalDisks }}
           - disk:
-              bus: {{ if $disk.bus }}{{ $disk.bus }}{{ else if $vmr.additionalDiskStorageBus }}{{ $vmr.additionalDiskStorageBus }}{{ else if $windows }}sata{{ else }}{{ coalesce $def.additionalDiskStorageBus $vmr.mainDiskStorageBus $def.mainDiskStorageBus }}{{ end }}
+              bus: {{ coalesce $disk.bus $vmr.additionalDiskStorageBus $def.additionalDiskStorageBus $vmr.mainDiskStorageBus $def.mainDiskStorageBus }}
             name: {{ $identifier }}-{{ $disk.name }}
           {{- end }}
           {{- if and (not $windows) (not $.Values.disableExternalSecrets) }}

@@ -56,14 +56,13 @@ tests:
               bus: virtio
             name: rhel9-test-001-data
 
-  - it: windows defaults additional disks to sata and omits cloud-init
+  - it: windows defaults additional disks to virtio and omits cloud-init
     set:
       vms:
         winvm:
           role: desktop
           count: 1
           os: windows2k22
-          mainDiskStorageBus: sata
           additionalDisks:
             - name: data
               storage: 80Gi
@@ -75,7 +74,7 @@ tests:
           path: spec.template.spec.domain.devices.disks
           content:
             disk:
-              bus: sata
+              bus: virtio
             name: windows2k22-desktop-001-data
       - notContains:
           path: spec.template.spec.domain.devices.disks
@@ -129,7 +128,7 @@ tests:
               secretRef:
                 name: cloudinit-server
 
-  - it: windows honors per-disk virtio bus override
+  - it: windows honors per-disk sata bus override
     set:
       vms:
         winvm:
@@ -139,7 +138,7 @@ tests:
           additionalDisks:
             - name: data
               storage: 80Gi
-              bus: virtio
+              bus: sata
     documentSelector:
       path: kind
       value: VirtualMachine
@@ -148,5 +147,5 @@ tests:
           path: spec.template.spec.domain.devices.disks
           content:
             disk:
-              bus: virtio
+              bus: sata
             name: windows2k22-desktop-001-data
