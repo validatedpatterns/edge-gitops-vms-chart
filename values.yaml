@@ -25,7 +25,8 @@ vmDefaults:
   count: 1
   # Could also be sata
   mainDiskStorageBus: virtio
-  # Bus for additionalDisks entries when bus is not set per disk
+  # Bus for additionalDisks entries when bus is not set per disk (Linux default).
+  # Windows VMs default additional disks to sata when bus is unset (no VirtIO drivers).
   additionalDiskStorageBus: virtio
   # Always | RerunOnFailure | Manual | Halted | Once (mutually exclusive with spec.running)
   runStrategy: Always

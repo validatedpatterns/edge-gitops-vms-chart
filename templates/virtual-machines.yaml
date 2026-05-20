@@ -1,8 +1,9 @@
 {{- $def := .Values.vmDefaults }}
 {{- range $vm, $vmr := .Values.vms }}
-{{- $windows := contains (coalesce $vmr.os $def.os) "windows" }}
+{{- $os := coalesce $vmr.os $def.os }}
+{{- $windows := regexMatch "(?i)windows" $os }}
 {{- $role := coalesce $vmr.role $def.role }}
-{{- if not $.Values.disableExternalSecrets }}
+{{- if and (not $windows) (not $.Values.disableExternalSecrets) }}
 ---
 apiVersion: {{ $.Values.secretStore.esoApiVersion }}
 kind: ExternalSecret
@@ -33,7 +34,7 @@ spec:
 {{- $idx := printf "%03d" (add $i 1) }}
 {{- $identifier := printf "%s-%s-%s" (coalesce $vmr.os $def.os) $role $idx }}
 {{- $additionalDisks := coalesce $vmr.additionalDisks $def.additionalDisks (list) }}
-{{- if not $.Values.disableExternalSecrets }}
+{{- if and (not $windows) (not $.Values.disableExternalSecrets) }}
 ---
 apiVersion: {{ $.Values.secretStore.esoApiVersion }}
 kind: ExternalSecret
@@ -153,7 +154,7 @@ spec:
         kubevirt.io/size: {{ coalesce $vmr.flavor $def.flavor }}
         vm.kubevirt.io/name: {{ $identifier }}
     spec:
-      {{- if not $.Values.disableExternalSecrets }}
+      {{- if and (not $windows) (not $.Values.disableExternalSecrets) }}
       accessCredentials:
         - sshPublicKey:
             propagationMethod:
@@ -185,10 +186,10 @@ spec:
             name: {{ $identifier }}
           {{- range $disk := $additionalDisks }}
           - disk:
-              bus: {{ coalesce $disk.bus $vmr.additionalDiskStorageBus $def.additionalDiskStorageBus $vmr.mainDiskStorageBus $def.mainDiskStorageBus }}
+              bus: {{ if $disk.bus }}{{ $disk.bus }}{{ else if $vmr.additionalDiskStorageBus }}{{ $vmr.additionalDiskStorageBus }}{{ else if $windows }}sata{{ else }}{{ coalesce $def.additionalDiskStorageBus $vmr.mainDiskStorageBus $def.mainDiskStorageBus }}{{ end }}
             name: {{ $identifier }}-{{ $disk.name }}
           {{- end }}
-          {{- if not $.Values.disableExternalSecrets }}
+          {{- if and (not $windows) (not $.Values.disableExternalSecrets) }}
           - disk:
               bus: virtio
             name: cloudinitdisk
@@ -221,7 +222,7 @@ spec:
           name: {{ $identifier }}-{{ $disk.name }}
         name: {{ $identifier }}-{{ $disk.name }}
       {{- end }}
-      {{- if not $.Values.disableExternalSecrets }}
+      {{- if and (not $windows) (not $.Values.disableExternalSecrets) }}
       - name: cloudinitdisk
         cloudInitConfigDrive:
           secretRef:
