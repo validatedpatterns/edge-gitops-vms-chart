@@ -55,7 +55,7 @@ This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtu
 | secretStore.kind | string | `"ClusterSecretStore"` |  |
 | secretStore.name | string | `"vault-backend"` |  |
 | serviceAccountName | string | `"ansible-edge-gitops-sa"` |  |
-| setDefaultVirtStorageClass | bool | `false` |  |
+| setDefaultVirtStorageClass | bool | `true` |  |
 | vmDefaults.accessMode | string | `"ReadWriteMany"` |  |
 | vmDefaults.additionalDiskStorageBus | string | `"virtio"` |  |
 | vmDefaults.cloudInitSecret | string | `"secret/data/hub/cloud-init"` |  |
