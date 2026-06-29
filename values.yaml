@@ -11,6 +11,7 @@ secretStore:
 vmNamespace: gitops-vms
 
 waitForMetalNode: false
+setDefaultVirtStorageClass: false
 jobTerminationGracePeriod: 3600
 
 vmDefaults:
