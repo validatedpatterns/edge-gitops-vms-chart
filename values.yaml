@@ -81,9 +81,10 @@ vmDefaults:
 # Per-VM additionalPvcDisks (optional; can also be set under vmDefaults):
 #   additionalPvcDisks:
 #     - name: data
-#       # pvcName or claimName optional; defaults to name
-#       # bus optional (inherit vmDefaults.additionalDiskStorageBus)
-#       # PVC must exist in the same namespace as the VM
+#       storage: 100Gi
+#       # create: false to attach an existing PVC instead of creating one
+#       # pvcName or claimName optional; defaults to {vm-name}-{name} when creating, or name when attaching
+#       # bus, accessMode, storageClassName, volumeMode optional (inherit vmDefaults)
 vms: {}
 
 registryCredentialExternalSecrets: {}

@@ -63,6 +63,34 @@ spec:
         key: {{ coalesce $vmr.sshsecret $def.sshsecret }}
         property: {{ coalesce $vmr.sshpubkeyfield $def.sshpubkeyfield }}
 {{- end }}
+{{- range $disk := $additionalPvcDisks }}
+{{- $diskName := required "additionalPvcDisks[].name is required" $disk.name }}
+{{- $creatingPvc := not (eq $disk.create false) }}
+{{- $claimName := ternary (coalesce $disk.pvcName $disk.claimName (printf "%s-%s" $identifier $diskName)) (coalesce $disk.pvcName $disk.claimName $diskName) $creatingPvc }}
+{{- if $creatingPvc }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $claimName }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    app: {{ $identifier }}
+    edge-gitops-role: {{ $role }}
+    {{- range $lbl_k, $lbl_v := (coalesce $vmr.extraLabels $def.extraLabels nil) }}
+    {{ $lbl_k | quote }}: {{ $lbl_v | quote }}
+    {{- end }}
+spec:
+  accessModes:
+    - {{ coalesce $disk.accessMode $vmr.accessMode $def.accessMode }}
+  resources:
+    requests:
+      storage: {{ required (printf "additionalPvcDisks[%s].storage is required when create is not false" $diskName) $disk.storage }}
+  storageClassName: {{ coalesce $disk.storageClassName $vmr.storageClassName $def.storageClassName }}
+  volumeMode: {{ coalesce $disk.volumeMode $vmr.volumeMode $def.volumeMode }}
+{{- end }}
+{{- end }}
 ---
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
@@ -229,9 +257,12 @@ spec:
         name: {{ $identifier }}-{{ $disk.name }}
       {{- end }}
       {{- range $disk := $additionalPvcDisks }}
-      - name: {{ $identifier }}-{{ required "additionalPvcDisks[].name is required" $disk.name }}
+      {{- $diskName := required "additionalPvcDisks[].name is required" $disk.name }}
+      {{- $creatingPvc := not (eq $disk.create false) }}
+      {{- $claimName := ternary (coalesce $disk.pvcName $disk.claimName (printf "%s-%s" $identifier $diskName)) (coalesce $disk.pvcName $disk.claimName $diskName) $creatingPvc }}
+      - name: {{ $identifier }}-{{ $diskName }}
         persistentVolumeClaim:
-          claimName: {{ coalesce $disk.pvcName $disk.claimName (required "additionalPvcDisks[].name is required" $disk.name) }}
+          claimName: {{ $claimName }}
       {{- end }}
       {{- if and (not $windows) (not $.Values.disableExternalSecrets) }}
       - name: cloudinitdisk
