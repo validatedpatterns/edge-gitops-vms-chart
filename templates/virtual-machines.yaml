@@ -34,6 +34,7 @@ spec:
 {{- $idx := printf "%03d" (add $i 1) }}
 {{- $identifier := printf "%s-%s-%s" (coalesce $vmr.os $def.os) $role $idx }}
 {{- $additionalDisks := coalesce $vmr.additionalDisks $def.additionalDisks (list) }}
+{{- $additionalPvcDisks := coalesce $vmr.additionalPvcDisks $def.additionalPvcDisks (list) }}
 {{- if and (not $windows) (not $.Values.disableExternalSecrets) }}
 ---
 apiVersion: {{ $.Values.secretStore.esoApiVersion }}
@@ -61,6 +62,34 @@ spec:
       remoteRef:
         key: {{ coalesce $vmr.sshsecret $def.sshsecret }}
         property: {{ coalesce $vmr.sshpubkeyfield $def.sshpubkeyfield }}
+{{- end }}
+{{- range $disk := $additionalPvcDisks }}
+{{- $diskName := required "additionalPvcDisks[].name is required" $disk.name }}
+{{- $creatingPvc := not (eq $disk.create false) }}
+{{- $claimName := ternary (coalesce $disk.pvcName $disk.claimName (printf "%s-%s" $identifier $diskName)) (coalesce $disk.pvcName $disk.claimName $diskName) $creatingPvc }}
+{{- if $creatingPvc }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $claimName }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    app: {{ $identifier }}
+    edge-gitops-role: {{ $role }}
+    {{- range $lbl_k, $lbl_v := (coalesce $vmr.extraLabels $def.extraLabels nil) }}
+    {{ $lbl_k | quote }}: {{ $lbl_v | quote }}
+    {{- end }}
+spec:
+  accessModes:
+    - {{ coalesce $disk.accessMode $vmr.accessMode $def.accessMode }}
+  resources:
+    requests:
+      storage: {{ required (printf "additionalPvcDisks[%s].storage is required when create is not false" $diskName) $disk.storage }}
+  storageClassName: {{ coalesce $disk.storageClassName $vmr.storageClassName $def.storageClassName }}
+  volumeMode: {{ coalesce $disk.volumeMode $vmr.volumeMode $def.volumeMode }}
+{{- end }}
 {{- end }}
 ---
 apiVersion: kubevirt.io/v1
@@ -189,6 +218,11 @@ spec:
               bus: {{ coalesce $disk.bus $vmr.additionalDiskStorageBus $def.additionalDiskStorageBus $vmr.mainDiskStorageBus $def.mainDiskStorageBus }}
             name: {{ $identifier }}-{{ $disk.name }}
           {{- end }}
+          {{- range $disk := $additionalPvcDisks }}
+          - disk:
+              bus: {{ coalesce $disk.bus $vmr.additionalDiskStorageBus $def.additionalDiskStorageBus $vmr.mainDiskStorageBus $def.mainDiskStorageBus }}
+            name: {{ $identifier }}-{{ required "additionalPvcDisks[].name is required" $disk.name }}
+          {{- end }}
           {{- if and (not $windows) (not $.Values.disableExternalSecrets) }}
           - disk:
               bus: virtio
@@ -221,6 +255,14 @@ spec:
       - dataVolume:
           name: {{ $identifier }}-{{ $disk.name }}
         name: {{ $identifier }}-{{ $disk.name }}
+      {{- end }}
+      {{- range $disk := $additionalPvcDisks }}
+      {{- $diskName := required "additionalPvcDisks[].name is required" $disk.name }}
+      {{- $creatingPvc := not (eq $disk.create false) }}
+      {{- $claimName := ternary (coalesce $disk.pvcName $disk.claimName (printf "%s-%s" $identifier $diskName)) (coalesce $disk.pvcName $disk.claimName $diskName) $creatingPvc }}
+      - name: {{ $identifier }}-{{ $diskName }}
+        persistentVolumeClaim:
+          claimName: {{ $claimName }}
       {{- end }}
       {{- if and (not $windows) (not $.Values.disableExternalSecrets) }}
       - name: cloudinitdisk

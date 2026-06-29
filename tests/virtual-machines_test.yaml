@@ -149,3 +149,131 @@ tests:
             disk:
               bus: sata
             name: windows2k22-desktop-001-data
+
+  - it: attaches pre-existing PVC disks without dataVolumeTemplates
+    set:
+      disableExternalSecrets: true
+      vms:
+        testvm:
+          role: test
+          count: 1
+          additionalPvcDisks:
+            - name: data
+              create: false
+              pvcName: existing-data-pvc
+    documentSelector:
+      path: kind
+      value: VirtualMachine
+    asserts:
+      - notExists:
+          path: spec.dataVolumeTemplates[1]
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: rhel9-test-001-data
+            persistentVolumeClaim:
+              claimName: existing-data-pvc
+      - contains:
+          path: spec.template.spec.domain.devices.disks
+          content:
+            disk:
+              bus: virtio
+            name: rhel9-test-001-data
+
+  - it: creates PVC disks by default
+    set:
+      disableExternalSecrets: true
+      vms:
+        testvm:
+          role: test
+          count: 1
+          additionalPvcDisks:
+            - name: pvcdata
+              storage: 50Gi
+    documentSelector:
+      path: kind
+      value: PersistentVolumeClaim
+    asserts:
+      - equal:
+          path: metadata.name
+          value: rhel9-test-001-pvcdata
+      - equal:
+          path: spec.resources.requests.storage
+          value: 50Gi
+
+  - it: VM references created PVC disks by default
+    set:
+      disableExternalSecrets: true
+      vms:
+        testvm:
+          role: test
+          count: 1
+          additionalPvcDisks:
+            - name: pvcdata
+              storage: 50Gi
+    documentSelector:
+      path: kind
+      value: VirtualMachine
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: rhel9-test-001-pvcdata
+            persistentVolumeClaim:
+              claimName: rhel9-test-001-pvcdata
+
+  - it: attaches existing PVC when create is false
+    set:
+      disableExternalSecrets: true
+      vms:
+        testvm:
+          role: test
+          count: 1
+          additionalPvcDisks:
+            - name: pvcdata
+              create: false
+    documentSelector:
+      path: kind
+      value: VirtualMachine
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: rhel9-test-001-pvcdata
+            persistentVolumeClaim:
+              claimName: pvcdata
+
+  - it: renders both additionalDisks and additionalPvcDisks together
+    set:
+      disableExternalSecrets: true
+      vms:
+        testvm:
+          role: test
+          count: 1
+          additionalDisks:
+            - name: new
+              storage: 20Gi
+          additionalPvcDisks:
+            - name: existing
+              create: false
+              pvcName: legacy-data-pvc
+              bus: sata
+    documentSelector:
+      path: kind
+      value: VirtualMachine
+    asserts:
+      - equal:
+          path: spec.dataVolumeTemplates[1].metadata.name
+          value: rhel9-test-001-new
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: rhel9-test-001-existing
+            persistentVolumeClaim:
+              claimName: legacy-data-pvc
+      - contains:
+          path: spec.template.spec.domain.devices.disks
+          content:
+            disk:
+              bus: sata
+            name: rhel9-test-001-existing
