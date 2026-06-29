@@ -149,3 +149,66 @@ tests:
             disk:
               bus: sata
             name: windows2k22-desktop-001-data
+
+  - it: attaches pre-existing PVC disks without dataVolumeTemplates
+    set:
+      disableExternalSecrets: true
+      vms:
+        testvm:
+          role: test
+          count: 1
+          additionalPvcDisks:
+            - name: data
+              pvcName: existing-data-pvc
+    documentSelector:
+      path: kind
+      value: VirtualMachine
+    asserts:
+      - notExists:
+          path: spec.dataVolumeTemplates[1]
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: rhel9-test-001-data
+            persistentVolumeClaim:
+              claimName: existing-data-pvc
+      - contains:
+          path: spec.template.spec.domain.devices.disks
+          content:
+            disk:
+              bus: virtio
+            name: rhel9-test-001-data
+
+  - it: renders both additionalDisks and additionalPvcDisks together
+    set:
+      disableExternalSecrets: true
+      vms:
+        testvm:
+          role: test
+          count: 1
+          additionalDisks:
+            - name: new
+              storage: 20Gi
+          additionalPvcDisks:
+            - name: existing
+              pvcName: legacy-data-pvc
+              bus: sata
+    documentSelector:
+      path: kind
+      value: VirtualMachine
+    asserts:
+      - equal:
+          path: spec.dataVolumeTemplates[1].metadata.name
+          value: rhel9-test-001-new
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: rhel9-test-001-existing
+            persistentVolumeClaim:
+              claimName: legacy-data-pvc
+      - contains:
+          path: spec.template.spec.domain.devices.disks
+          content:
+            disk:
+              bus: sata
+            name: rhel9-test-001-existing

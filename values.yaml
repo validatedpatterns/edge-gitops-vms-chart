@@ -24,7 +24,7 @@ vmDefaults:
   storageClassName: "ocs-storagecluster-ceph-rbd-virtualization"
   volumeMode: "Block"
   count: 1
-  # Override per VM or per additionalDisks[].bus (e.g. sata for generic Windows images).
+  # Override per VM or per additionalDisks[].bus / additionalPvcDisks[].bus (e.g. sata for generic Windows images).
   mainDiskStorageBus: virtio
   additionalDiskStorageBus: virtio
   # Always | RerunOnFailure | Manual | Halted | Once (mutually exclusive with spec.running)
@@ -78,6 +78,12 @@ vmDefaults:
 #       storage: 100Gi
 #       # bus, accessMode, storageClassName, volumeMode optional (inherit vmDefaults)
 #       # dataVolume: clone from a DataSource name; omit for a blank disk
+# Per-VM additionalPvcDisks (optional; can also be set under vmDefaults):
+#   additionalPvcDisks:
+#     - name: data
+#       pvcName: my-existing-data-pvc
+#       # bus optional (inherit vmDefaults.additionalDiskStorageBus)
+#       # PVC must exist in the same namespace as the VM
 vms: {}
 
 registryCredentialExternalSecrets: {}

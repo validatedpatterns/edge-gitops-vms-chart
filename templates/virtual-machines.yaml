@@ -34,6 +34,7 @@ spec:
 {{- $idx := printf "%03d" (add $i 1) }}
 {{- $identifier := printf "%s-%s-%s" (coalesce $vmr.os $def.os) $role $idx }}
 {{- $additionalDisks := coalesce $vmr.additionalDisks $def.additionalDisks (list) }}
+{{- $additionalPvcDisks := coalesce $vmr.additionalPvcDisks $def.additionalPvcDisks (list) }}
 {{- if and (not $windows) (not $.Values.disableExternalSecrets) }}
 ---
 apiVersion: {{ $.Values.secretStore.esoApiVersion }}
@@ -189,6 +190,11 @@ spec:
               bus: {{ coalesce $disk.bus $vmr.additionalDiskStorageBus $def.additionalDiskStorageBus $vmr.mainDiskStorageBus $def.mainDiskStorageBus }}
             name: {{ $identifier }}-{{ $disk.name }}
           {{- end }}
+          {{- range $disk := $additionalPvcDisks }}
+          - disk:
+              bus: {{ coalesce $disk.bus $vmr.additionalDiskStorageBus $def.additionalDiskStorageBus $vmr.mainDiskStorageBus $def.mainDiskStorageBus }}
+            name: {{ $identifier }}-{{ required "additionalPvcDisks[].name is required" $disk.name }}
+          {{- end }}
           {{- if and (not $windows) (not $.Values.disableExternalSecrets) }}
           - disk:
               bus: virtio
@@ -221,6 +227,11 @@ spec:
       - dataVolume:
           name: {{ $identifier }}-{{ $disk.name }}
         name: {{ $identifier }}-{{ $disk.name }}
+      {{- end }}
+      {{- range $disk := $additionalPvcDisks }}
+      - name: {{ $identifier }}-{{ required "additionalPvcDisks[].name is required" $disk.name }}
+        persistentVolumeClaim:
+          claimName: {{ required (printf "additionalPvcDisks[%s].pvcName is required" (required "additionalPvcDisks[].name is required" $disk.name)) $disk.pvcName }}
       {{- end }}
       {{- if and (not $windows) (not $.Values.disableExternalSecrets) }}
       - name: cloudinitdisk
