@@ -1,0 +1,83 @@
+---
+suite: set-default-virt-storageclass-job
+templates:
+  - templates/job-setDefaultVirtStorageClass.yaml
+release:
+  name: test
+  namespace: gitops-vms
+tests:
+  - it: does not render when disabled
+    set:
+      setDefaultVirtStorageClass: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders job when enabled
+    set:
+      setDefaultVirtStorageClass: true
+      vmDefaults:
+        storageClassName: ocs-storagecluster-ceph-rbd-virtualization
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Job
+      - equal:
+          path: metadata.name
+          value: job-set-default-virt-storageclass
+      - equal:
+          path: metadata.annotations["argocd.argoproj.io/sync-wave"]
+          value: "1"
+      - matchRegex:
+          path: spec.template.spec.containers[0].command[2]
+          pattern: ocs-storagecluster-ceph-rbd-virtualization
+
+---
+suite: set-default-virt-storageclass-rbac
+templates:
+  - templates/rbac/set-default-virt-storageclass.yaml
+release:
+  name: test
+  namespace: gitops-vms
+tests:
+  - it: does not render RBAC when disabled
+    set:
+      setDefaultVirtStorageClass: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders RBAC when enabled
+    set:
+      setDefaultVirtStorageClass: true
+    asserts:
+      - hasDocuments:
+          count: 2
+      - isKind:
+          of: ClusterRole
+        documentIndex: 0
+      - contains:
+          path: rules[0].resources
+          content: storageclasses
+        documentIndex: 0
+      - isKind:
+          of: ClusterRoleBinding
+        documentIndex: 1
+
+---
+suite: set-default-virt-storageclass-serviceaccount
+templates:
+  - templates/rbac/serviceAccount.yaml
+release:
+  name: test
+  namespace: gitops-vms
+tests:
+  - it: renders service account when enabled
+    set:
+      setDefaultVirtStorageClass: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ServiceAccount
