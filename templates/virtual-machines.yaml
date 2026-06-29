@@ -231,7 +231,7 @@ spec:
       {{- range $disk := $additionalPvcDisks }}
       - name: {{ $identifier }}-{{ required "additionalPvcDisks[].name is required" $disk.name }}
         persistentVolumeClaim:
-          claimName: {{ required (printf "additionalPvcDisks[%s].pvcName is required" (required "additionalPvcDisks[].name is required" $disk.name)) $disk.pvcName }}
+          claimName: {{ coalesce $disk.pvcName $disk.claimName (required "additionalPvcDisks[].name is required" $disk.name) }}
       {{- end }}
       {{- if and (not $windows) (not $.Values.disableExternalSecrets) }}
       - name: cloudinitdisk

@@ -179,6 +179,26 @@ tests:
               bus: virtio
             name: rhel9-test-001-data
 
+  - it: defaults additionalPvcDisks claimName to disk name
+    set:
+      disableExternalSecrets: true
+      vms:
+        testvm:
+          role: test
+          count: 1
+          additionalPvcDisks:
+            - name: pvcdata
+    documentSelector:
+      path: kind
+      value: VirtualMachine
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: rhel9-test-001-pvcdata
+            persistentVolumeClaim:
+              claimName: pvcdata
+
   - it: renders both additionalDisks and additionalPvcDisks together
     set:
       disableExternalSecrets: true
