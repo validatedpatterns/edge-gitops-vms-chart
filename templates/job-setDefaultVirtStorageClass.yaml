@@ -1,4 +1,5 @@
 {{- if .Values.setDefaultVirtStorageClass }}
+{{- $dataSources := include "edge-gitops-vms.dataSourceNames" . | trim }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -17,10 +18,15 @@ spec:
         - |
           set -euo pipefail
           TARGET_SC="{{ .Values.vmDefaults.storageClassName }}"
+          DS_NAMESPACE="{{ .Values.vmDefaults.externalDataSourceNamespace }}"
+          # Space-separated DataSource names derived from chart VMs (may be empty)
+          DATASOURCES="{{ $dataSources }}"
+          SLEEP_SECS=15
 
           check_other_default_virt() {
             local sc annotation
             while IFS= read -r line; do
+              [[ -z "${line}" ]] && continue
               sc="${line%%:*}"
               annotation="${line#*:}"
               if [ "$annotation" = "true" ] && [ "$sc" != "$TARGET_SC" ]; then
@@ -31,26 +37,146 @@ spec:
             return 0
           }
 
-          while true; do
-            if ! oc get storageclass "${TARGET_SC}" >/dev/null 2>&1; then
-              echo "StorageClass ${TARGET_SC} not found, waiting..."
-              sleep 15
-              continue
-            fi
-
+          ensure_default_virt_sc() {
             if ! check_other_default_virt; then
-              exit 1
+              return 1
             fi
-
+            local current
             current=$(oc get storageclass "${TARGET_SC}" -o jsonpath='{.metadata.annotations.storageclass\.kubevirt\.io/is-default-virt-class}')
             if [ "${current}" = "true" ]; then
               echo "StorageClass ${TARGET_SC} is already the default virt storage class"
+              return 0
+            fi
+            oc patch storageclass "${TARGET_SC}" -p '{"metadata":{"annotations":{"storageclass.kubevirt.io/is-default-virt-class":"true"}}}'
+            echo "Set ${TARGET_SC} as default virt storage class"
+            return 0
+          }
+
+          # Returns 0 when DataSource is Ready and its source CSI driver/provisioner
+          # matches TARGET_SC.provisioner (avoids CDI host-assisted clone fallback).
+          datasource_clone_ready() {
+            local ds=$1
+            local ready snap pvc pvc_ns deleting vsc content driver pvc_sc pvc_prov
+
+            if ! oc get datasource "${ds}" -n "${DS_NAMESPACE}" >/dev/null 2>&1; then
+              echo "DataSource ${DS_NAMESPACE}/${ds} not found yet"
+              return 1
+            fi
+
+            ready=$(oc get datasource "${ds}" -n "${DS_NAMESPACE}" -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || true)
+            if [ "${ready}" != "True" ]; then
+              echo "DataSource ${DS_NAMESPACE}/${ds} Ready=${ready:-Unknown}"
+              return 1
+            fi
+
+            snap=$(oc get datasource "${ds}" -n "${DS_NAMESPACE}" -o jsonpath='{.spec.source.snapshot.name}' 2>/dev/null || true)
+            pvc=$(oc get datasource "${ds}" -n "${DS_NAMESPACE}" -o jsonpath='{.spec.source.pvc.name}' 2>/dev/null || true)
+            pvc_ns=$(oc get datasource "${ds}" -n "${DS_NAMESPACE}" -o jsonpath='{.spec.source.pvc.namespace}' 2>/dev/null || true)
+
+            if [ -n "${snap}" ]; then
+              if ! oc get volumesnapshot "${snap}" -n "${DS_NAMESPACE}" >/dev/null 2>&1; then
+                echo "VolumeSnapshot ${DS_NAMESPACE}/${snap} for DataSource ${ds} not found"
+                return 1
+              fi
+              deleting=$(oc get volumesnapshot "${snap}" -n "${DS_NAMESPACE}" -o jsonpath='{.metadata.deletionTimestamp}' 2>/dev/null || true)
+              if [ -n "${deleting}" ]; then
+                echo "VolumeSnapshot ${DS_NAMESPACE}/${snap} is being deleted"
+                return 1
+              fi
+              vsc=$(oc get volumesnapshot "${snap}" -n "${DS_NAMESPACE}" -o jsonpath='{.spec.volumeSnapshotClassName}' 2>/dev/null || true)
+              if [ -n "${vsc}" ]; then
+                driver=$(oc get volumesnapshotclass "${vsc}" -o jsonpath='{.driver}' 2>/dev/null || true)
+              else
+                content=$(oc get volumesnapshot "${snap}" -n "${DS_NAMESPACE}" -o jsonpath='{.status.boundVolumeSnapshotContentName}' 2>/dev/null || true)
+                if [ -z "${content}" ]; then
+                  echo "VolumeSnapshot ${snap} has no VolumeSnapshotClass or bound content yet"
+                  return 1
+                fi
+                driver=$(oc get volumesnapshotcontent "${content}" -o jsonpath='{.spec.driver}' 2>/dev/null || true)
+              fi
+              if [ -z "${driver}" ]; then
+                echo "Could not resolve CSI driver for VolumeSnapshot ${snap}"
+                return 1
+              fi
+              if [ "${driver}" != "${TARGET_PROVISIONER}" ]; then
+                echo "DataSource ${ds}: snapshot driver '${driver}' != StorageClass ${TARGET_SC} provisioner '${TARGET_PROVISIONER}'"
+                return 1
+              fi
+              echo "DataSource ${ds}: Ready, snapshot driver matches ${TARGET_PROVISIONER}"
+              return 0
+            fi
+
+            if [ -n "${pvc}" ]; then
+              pvc_ns="${pvc_ns:-${DS_NAMESPACE}}"
+              if ! oc get pvc "${pvc}" -n "${pvc_ns}" >/dev/null 2>&1; then
+                echo "PVC ${pvc_ns}/${pvc} for DataSource ${ds} not found"
+                return 1
+              fi
+              pvc_sc=$(oc get pvc "${pvc}" -n "${pvc_ns}" -o jsonpath='{.spec.storageClassName}' 2>/dev/null || true)
+              if [ -z "${pvc_sc}" ]; then
+                echo "PVC ${pvc_ns}/${pvc} has no storageClassName"
+                return 1
+              fi
+              pvc_prov=$(oc get storageclass "${pvc_sc}" -o jsonpath='{.provisioner}' 2>/dev/null || true)
+              if [ -z "${pvc_prov}" ]; then
+                echo "Could not resolve provisioner for StorageClass ${pvc_sc}"
+                return 1
+              fi
+              if [ "${pvc_prov}" != "${TARGET_PROVISIONER}" ]; then
+                echo "DataSource ${ds}: PVC provisioner '${pvc_prov}' != StorageClass ${TARGET_SC} provisioner '${TARGET_PROVISIONER}'"
+                return 1
+              fi
+              echo "DataSource ${ds}: Ready, PVC provisioner matches ${TARGET_PROVISIONER}"
+              return 0
+            fi
+
+            echo "DataSource ${ds} has neither snapshot nor pvc source"
+            return 1
+          }
+
+          all_datasources_clone_ready() {
+            local ds
+            if [ -z "${DATASOURCES}" ]; then
+              echo "No VM DataSources to wait for"
+              return 0
+            fi
+            for ds in ${DATASOURCES}; do
+              if ! datasource_clone_ready "${ds}"; then
+                return 1
+              fi
+            done
+            return 0
+          }
+
+          echo "Target virt StorageClass: ${TARGET_SC}"
+          echo "DataSource namespace: ${DS_NAMESPACE}"
+          echo "Required DataSources: ${DATASOURCES:-<none>}"
+
+          while true; do
+            if ! oc get storageclass "${TARGET_SC}" >/dev/null 2>&1; then
+              echo "StorageClass ${TARGET_SC} not found, waiting..."
+              sleep "${SLEEP_SECS}"
+              continue
+            fi
+
+            TARGET_PROVISIONER=$(oc get storageclass "${TARGET_SC}" -o jsonpath='{.provisioner}')
+            if [ -z "${TARGET_PROVISIONER}" ]; then
+              echo "StorageClass ${TARGET_SC} has empty provisioner, waiting..."
+              sleep "${SLEEP_SECS}"
+              continue
+            fi
+
+            if ! ensure_default_virt_sc; then
+              exit 1
+            fi
+
+            if all_datasources_clone_ready; then
+              echo "Default virt StorageClass set and required DataSources are clone-ready"
               exit 0
             fi
 
-            oc patch storageclass "${TARGET_SC}" -p '{"metadata":{"annotations":{"storageclass.kubevirt.io/is-default-virt-class":"true"}}}'
-            echo "Set ${TARGET_SC} as default virt storage class"
-            exit 0
+            echo "Waiting for DataSources to become clone-ready..."
+            sleep "${SLEEP_SECS}"
           done
         name: set-default-virt-storageclass
       dnsPolicy: ClusterFirst
