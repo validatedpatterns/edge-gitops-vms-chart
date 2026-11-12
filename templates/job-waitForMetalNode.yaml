@@ -7,6 +7,18 @@ metadata:
   name: job-wait-for-metal-node
   namespace: {{ .Values.vmNamespace }}
 spec:
+  # A drain-evicted (cancelled) pod is ignored rather than counted as a
+  # failure: the Job stays incomplete and a replacement pod resumes the
+  # wait. Only genuine failures count toward backoffLimit.
+  podFailurePolicy:
+    rules:
+      - action: Ignore
+        onExitCodes:
+          containerName: wait-for-metal-node
+          values: [143]
+      - action: Ignore
+        onDisruptionConditions:
+          - type: DisruptionTarget
   template:
     spec:
       containers:
@@ -15,6 +27,9 @@ spec:
         - /bin/bash
         - -c
         - |
+          # Exit promptly with a nonzero code on SIGTERM so node drains can
+          # cancel this Job without it being marked successful.
+          trap 'echo "Cancelled by SIGTERM; exiting 143 without success"; exit 143' TERM
           while [ 1 ];
           do
             nodes=$(oc get machinesets.machine.openshift.io -n openshift-machine-api -l 'edge-gitops-role=kubevirt-worker' -o jsonpath='{.items[*].status.availableReplicas}' | sed -e 's/ //g')

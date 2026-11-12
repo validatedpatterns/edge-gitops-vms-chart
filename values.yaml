@@ -12,7 +12,10 @@ vmNamespace: gitops-vms
 
 waitForMetalNode: false
 setDefaultVirtStorageClass: true
-jobTerminationGracePeriod: 3600
+# -- Grace period before SIGKILL when a wait job pod is cancelled by a node
+# drain. Keep this short: the jobs trap SIGTERM and exit promptly, and a
+# long grace period blocks MCO drains/rollouts for its full duration.
+jobTerminationGracePeriod: 60
 
 vmDefaults:
   role: generic
