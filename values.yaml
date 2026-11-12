@@ -100,6 +100,8 @@ externalDataSources: {}
 #     type: registry
 #     url: "docker://quay.io/eduffy/win2k22-dv:thin"
 #     size: 50G
+#     # storageClassName optional (defaults to vmDefaults.storageClassName)
+#     storageClassName: ocs-storagecluster-ceph-rbd-virtualization
 #     registryCredentialsSecret: quay-creds # You will need to create either manually or using registryCredentialExternalSecrets above
 
 # Example downloaded from url
@@ -107,6 +109,7 @@ externalDataSources: {}
 #      type: http
 #      url: https://releases.ubuntu.com/24.04.4/ubuntu-24.04.4-live-server-amd64.iso
 #      size: 10G
+#      storageClassName: gp3-csi
 
 
 # This field will disable ExternalSecrets for fetching SSH Authorized Keys and

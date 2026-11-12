@@ -1,6 +1,6 @@
 # edge-gitops-vms
 
-![Version: 0.5.3](https://img.shields.io/badge/Version-0.5.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.5.4](https://img.shields.io/badge/Version-0.5.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 Edge GitOps VMs
 
@@ -8,6 +8,7 @@ This chart is used to set up Edge GitOps VMs in conjunction with OpenShift Virtu
 
 ### Notable changes
 
+* v0.5.4: Allow setting dataSource storageclass, defaulting to vmDefault or one set by the edv object.
 * v0.5.3: Extend set-default-virt-storageclass job to wait until VM DataSources are Ready and their CSI driver/provisioner matches vmDefaults.storageClassName (prevents CDI host-assisted clone fallback onto the wrong StorageClass)
 * v0.5.2: Add optional additionalPvcDisks with default PVC creation; set create: false to attach existing PVCs
 * v0.5.1: Add optional job to set the default KubeVirt storage class from vmDefaults.storageClassName
