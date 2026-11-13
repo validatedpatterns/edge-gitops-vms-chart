@@ -16,9 +16,10 @@ spec:
       - action: Ignore
         onExitCodes:
           containerName: set-default-virt-storageclass
+          operator: In
           values: [143]
       - action: Ignore
-        onDisruptionConditions:
+        onPodConditions:
           - type: DisruptionTarget
   template:
     spec:
