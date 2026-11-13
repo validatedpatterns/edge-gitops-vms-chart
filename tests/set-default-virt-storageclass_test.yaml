@@ -40,6 +40,32 @@ tests:
           path: spec.template.spec.containers[0].command[2]
           pattern: openshift-virtualization-os-images
 
+  - it: is cancelable without being marked successful
+    asserts:
+      # SIGTERM trap exits 143 (nonzero) so the Job never completes on cancel
+      - matchRegex:
+          path: spec.template.spec.containers[0].command[2]
+          pattern: trap '.*exit 143' TERM
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 60
+      # Drain evictions are ignored, not counted as failures
+      - equal:
+          path: spec.podFailurePolicy.rules[0].action
+          value: Ignore
+      - equal:
+          path: spec.podFailurePolicy.rules[0].onExitCodes.operator
+          value: In
+      - equal:
+          path: spec.podFailurePolicy.rules[0].onExitCodes.values
+          value: [143]
+      - equal:
+          path: spec.podFailurePolicy.rules[1].action
+          value: Ignore
+      - equal:
+          path: spec.podFailurePolicy.rules[1].onPodConditions[0].type
+          value: DisruptionTarget
+
   - it: embeds DataSource names from VMs
     set:
       setDefaultVirtStorageClass: true

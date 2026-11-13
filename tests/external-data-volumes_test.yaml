@@ -1,0 +1,79 @@
+---
+suite: external-data-volumes
+templates:
+  - templates/external-data-volumes.yaml
+release:
+  name: test
+  namespace: gitops-vms
+tests:
+  - it: defaults the DataVolume storageClassName to vmDefaults
+    set:
+      externalDataSources:
+        - name: quay-windows
+          type: registry
+          url: "docker://quay.io/eduffy/win2k22-dv:thin"
+          size: 50G
+    documentSelector:
+      path: kind
+      value: DataVolume
+    asserts:
+      - equal:
+          path: metadata.name
+          value: quay-windows
+      - equal:
+          path: spec.storage.storageClassName
+          value: ocs-storagecluster-ceph-rbd-virtualization
+
+  - it: lets each externalDataSource override the storageClassName
+    set:
+      externalDataSources:
+        - name: quay-windows
+          type: registry
+          url: "docker://quay.io/eduffy/win2k22-dv:thin"
+          size: 50G
+          storageClassName: gp3-csi
+    documentSelector:
+      path: kind
+      value: DataVolume
+    asserts:
+      - equal:
+          path: spec.storage.storageClassName
+          value: gp3-csi
+
+  - it: uses the vmDefaults storageClassName when overridden globally
+    set:
+      vmDefaults:
+        storageClassName: gp3-csi
+      externalDataSources:
+        - name: ubuntu-installer
+          type: http
+          url: https://releases.ubuntu.com/24.04.4/ubuntu-24.04.4-live-server-amd64.iso
+          size: 10G
+    documentSelector:
+      path: kind
+      value: DataVolume
+    asserts:
+      - equal:
+          path: spec.storage.storageClassName
+          value: gp3-csi
+
+  - it: renders a DataSource referencing the DataVolume
+    set:
+      externalDataSources:
+        - name: quay-windows
+          type: registry
+          url: "docker://quay.io/eduffy/win2k22-dv:thin"
+          size: 50G
+    documentSelector:
+      path: kind
+      value: DataSource
+    asserts:
+      - equal:
+          path: metadata.name
+          value: quay-windows
+      - equal:
+          path: spec.source.pvc.name
+          value: quay-windows
+      - equal:
+          path: spec.source.pvc.namespace
+          value: openshift-virtualization-os-images
