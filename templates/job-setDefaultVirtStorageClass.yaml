@@ -8,6 +8,19 @@ metadata:
   name: job-set-default-virt-storageclass
   namespace: {{ .Values.vmNamespace }}
 spec:
+  # A drain-evicted (cancelled) pod is ignored rather than counted as a
+  # failure: the Job stays incomplete and a replacement pod resumes the
+  # wait. Only genuine failures count toward backoffLimit.
+  podFailurePolicy:
+    rules:
+      - action: Ignore
+        onExitCodes:
+          containerName: set-default-virt-storageclass
+          operator: In
+          values: [143]
+      - action: Ignore
+        onPodConditions:
+          - type: DisruptionTarget
   template:
     spec:
       containers:
@@ -17,6 +30,11 @@ spec:
         - -c
         - |
           set -euo pipefail
+          # Exit promptly with a nonzero code on SIGTERM so node drains can
+          # cancel this Job without it ever being marked successful. The
+          # poll loop only blocks for SLEEP_SECS at a time, so the trap
+          # fires quickly.
+          trap 'echo "Cancelled by SIGTERM; exiting 143 without success"; exit 143' TERM
           TARGET_SC="{{ .Values.vmDefaults.storageClassName }}"
           DS_NAMESPACE="{{ .Values.vmDefaults.externalDataSourceNamespace }}"
           # Space-separated DataSource names derived from chart VMs (may be empty)

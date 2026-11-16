@@ -31,6 +31,7 @@ spec:
     resources:
       requests:
         storage: {{ $edv.size }}
+    storageClassName: {{ coalesce $edv.storageClassName $def.storageClassName }}
   {{- end }}
 ---
 apiVersion: cdi.kubevirt.io/v1beta1
